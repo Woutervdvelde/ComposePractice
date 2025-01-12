@@ -1,4 +1,5 @@
 pluginManagement {
+//    includeBuild("buildplugin")
     repositories {
         google {
             content {
@@ -21,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ComposePractice"
 include(":app")
- 
+include(":buildplugin")
