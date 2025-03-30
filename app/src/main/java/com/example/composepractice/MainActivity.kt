@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.composepractice.ui.project.livenotification.LiveNotification
 import com.example.composepractice.ui.project.lock.LockScreen
 import com.example.composepractice.ui.theme.ComposePracticeTheme
 
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposePracticeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {  _ ->
-                    LockScreen()
+                    LiveNotification()
                 }
             }
         }

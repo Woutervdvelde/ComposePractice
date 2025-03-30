@@ -31,7 +31,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
-@RequiresApi(Build.VERSION_CODES.BAKLAVA)
 @Composable
 fun LiveNotification() {
     val scope = rememberCoroutineScope()
@@ -51,7 +50,6 @@ fun LiveNotification() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.BAKLAVA)
 private suspend fun startProgressTracking(
     liveNotificationBuilder: LiveNotificationBuilder,
     initialState: AlignmentState
@@ -73,7 +71,6 @@ private suspend fun startProgressTracking(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.BAKLAVA)
 class LiveNotificationBuilder(private val context: Context) {
     fun show(alignmentState: AlignmentState) {
         val notificationManager = context.getSystemService<NotificationManager>() ?: return
@@ -132,7 +129,6 @@ val alignmentSubjects = listOf(
     AlignmentSubject("Outro", "Outro to Android Alignment, goodnight", 20, Color(0, 147, 65))
 )
 
-@RequiresApi(Build.VERSION_CODES.BAKLAVA)
 @Preview
 @Composable
 private fun LiveNotificationPreview() {
