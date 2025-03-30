@@ -94,11 +94,17 @@ class LiveNotificationBuilder(private val context: Context) {
         } + state.progress
 
         val style = Notification.ProgressStyle()
-            .setStyledByProgress(false)
+            .setStyledByProgress(true)
             .setProgress(totalProgress)
             .setProgressSegments(alignmentSubjects.map { subject ->
                 Notification.ProgressStyle.Segment(subject.duration).setColor(subject.color.toArgb())
             })
+//            .setProgressPoints(
+//                listOf(
+//                    Notification.ProgressStyle.Point(60).setColor(Color(255, 187, 0).toArgb()),
+//                    Notification.ProgressStyle.Point(150).setColor(Color(255, 187, 0).toArgb())
+//                )
+//            )
             .setProgressTrackerIcon(Icon.createWithResource(context, R.drawable.framna))
 
         return Notification.Builder(context, CHANNEL_ID)
