@@ -138,4 +138,3 @@ val alignmentSubjects = listOf(
 private fun LiveNotificationPreview() {
     LiveNotification()
 }
-
