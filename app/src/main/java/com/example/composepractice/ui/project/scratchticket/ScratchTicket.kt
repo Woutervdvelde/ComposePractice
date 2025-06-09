@@ -73,7 +73,7 @@ fun ScratchTicketScreen() {
         }
 
         Button(
-            onClick = {}
+            onClick = scratchState::reset
         ) {
             Text("Reset ticket")
         }
@@ -120,6 +120,12 @@ class ScratchState(
     private var paths: Path = Path()
     private val currentPath: MutableList<Offset> = mutableListOf()
     private val _invalidateTrigger = mutableIntStateOf(0)
+
+    fun reset() {
+        paths = Path()
+        currentPath.clear()
+        _invalidateTrigger.intValue++
+    }
 
     internal val onDrag: (PointerInputChange, Offset) -> Unit = { change, dragAmount ->
         change.consume()
