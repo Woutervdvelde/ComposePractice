@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import com.example.composepractice.ui.project.rive.RiveScreen
 import com.example.composepractice.ui.project.scratchticket.ScratchTicketScreen
 import com.example.composepractice.ui.theme.ComposePracticeTheme
 
@@ -20,7 +21,7 @@ class MainActivity : ComponentActivity() {
             ComposePracticeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {  contentPadding ->
                     Box(modifier = Modifier.padding(contentPadding)) {
-                        ScratchTicketScreen()
+                        RiveScreen()
                     }
                 }
             }
