@@ -3,9 +3,7 @@ package com.example.composepractice.ui.project.rive
 import androidx.annotation.RawRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -13,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +21,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import app.rive.runtime.kotlin.RiveAnimationView
 import com.example.composepractice.R
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RiveScreen() {
     Scaffold { contentPadding ->
@@ -37,7 +33,7 @@ fun RiveScreen() {
             var isPlaying by remember { mutableStateOf(true) }
             var isLoading by remember { mutableStateOf(true) }
             var isConnected by remember { mutableStateOf(false) }
-            var animations by remember { mutableStateOf(listOf<String>()) }
+            val animations by remember { mutableStateOf(listOf<String>()) }
 
             RiveAnimation(
                 resId = R.raw.rive_connection,

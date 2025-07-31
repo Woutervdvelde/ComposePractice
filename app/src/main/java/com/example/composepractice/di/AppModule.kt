@@ -1,7 +1,7 @@
 package com.example.composepractice.di
 
+import com.example.composepractice.navigation.NavRoute
 import com.example.composepractice.navigation.Navigator
-import com.example.composepractice.ui.project.home.HomeRoute
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,5 +14,5 @@ object AppModule {
 
     @Provides
     @ActivityRetainedScoped
-    fun provideNavigator(): Navigator =  Navigator(startDestination = HomeRoute)
+    fun provideNavigator(): Navigator =  Navigator(startDestination = NavRoute.Home)
 }

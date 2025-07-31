@@ -1,4 +1,4 @@
-package com.example.composepractice.ui.project.livenotification
+package com.example.composepractice.ui.project.rive
 
 import androidx.navigation3.runtime.entry
 import com.example.composepractice.navigation.EntryProviderInstaller
@@ -12,13 +12,13 @@ import dagger.multibindings.IntoSet
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
-object LiveNotificationModule {
+object RiveNavigation {
 
     @IntoSet
     @Provides
     fun provideEntryProviderInstaller(navigator: Navigator): EntryProviderInstaller = {
-        entry<NavRoute.LiveNotification> {
-            LiveNotification()
+        entry<NavRoute.Rive> {
+            RiveScreen()
         }
     }
 }

@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                         rememberViewModelStoreNavEntryDecorator()
                     ),
                     entryProvider = entryProvider {
-                        entryProviderBuilders.forEach { builder -> this.builder() }
+                        entryProviderBuilders.forEach { it() }
                     }
                 )
             }
