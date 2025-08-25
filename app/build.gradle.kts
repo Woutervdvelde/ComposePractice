@@ -84,4 +84,7 @@ dependencies {
     implementation(libs.androidx.startup)
     implementation(libs.rive)
     implementation(kotlin("reflect"))
+
+    debugImplementation("io.github.openflocon:flocon:1.0.6")
+//    debugImplementation("io.github.openflocon:flocon:1.0.3")
 }
