@@ -30,6 +30,11 @@ sealed class NavRoute(
         emoji = "\uD83D\uDD12"
     )
 
+    data object ParticleSystem : NavRoute(
+        title = "Particle System",
+        emoji = "❄\uFE0F"
+    )
+
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =
             NavRoute::class.sealedSubclasses.mapNotNull { kClass ->
