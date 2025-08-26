@@ -3,6 +3,7 @@ package com.example.composepractice.ui.project.particlesystem
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,10 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.pointerInput
 import com.example.composepractice.R
 import kotlinx.coroutines.isActive
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.random.Random
 
 @Composable
@@ -57,6 +57,32 @@ fun ParticleSystem(
 
     Canvas(
         modifier = modifier
+            .pointerInput(Unit) {
+                var lastPosition = Offset.Zero
+                var lastVelocity = Offset.Zero
+
+                detectDragGestures(
+                    onDragEnd = {
+                        particleSystemState.addSingleParticle(
+                            Particle(
+                                resource = ParticleResource.Resource(R.drawable.framna),
+                                color = Color.White,
+                                startPosition = lastPosition,
+                                velocity = lastVelocity,
+                                rotation = ParticleRotation(
+                                    speed = 0f,
+                                    initial = 0f,
+                                ),
+                                lifeSpan = 10f,
+                            )
+                        )
+                    },
+                    onDrag = { change, dragAmount ->
+                        lastVelocity = dragAmount
+                        lastPosition = change.position
+                    }
+                )
+            }
     ) {
         particleSystemState.draw(this)
     }
@@ -72,18 +98,9 @@ sealed interface ParticleResource {
     )
 }
 
-data class ParticleVelocity(
-    val acceleration: Offset,
-    val initial: Offset,
-    val minimum: Offset,
-    val maximum: Offset
-)
-
 data class ParticleRotation(
     val speed: Float,
     val initial: Float,
-    val minimum: Float,
-    val maximum: Float
 )
 
 /**
@@ -93,7 +110,7 @@ class Particle(
     val resource: ParticleResource,
     val color: Color,
     val startPosition: Offset,
-    val velocity: ParticleVelocity,
+    val velocity: Offset,
     val rotation: ParticleRotation,
     val lifeSpan: Float,
     var alive: Boolean = true,
@@ -101,17 +118,14 @@ class Particle(
     private val _invalidateTrigger = mutableIntStateOf(0)
     private var currentPosition = startPosition
     private var currentRotation = rotation.initial
-    private var currentAcceleration = velocity.initial
     private var currentLifeSpan = lifeSpan
-    private var currentVelocity = velocity.initial
 
     fun update(deltaTime: Float) {
         currentPosition = currentPosition.copy(
-            x = currentPosition.x + currentVelocity.x * deltaTime,
-            y = currentPosition.y + currentVelocity.y * deltaTime
+            x = currentPosition.x + velocity.x * deltaTime,
+            y = currentPosition.y + velocity.y * deltaTime
         )
         currentRotation += rotation.speed
-        currentVelocity += currentAcceleration
         currentLifeSpan -= deltaTime
 
         if (currentLifeSpan <= 0f) {
@@ -163,17 +177,10 @@ class ParticleSystemState(
                     x = 0f,
                     y = 0f
                 ),
-                velocity = ParticleVelocity(
-                    acceleration = Offset(0f, 0f),
-                    initial = generateRandomOffset(min = Offset(.1f, .1f), max = Offset(.9f, .9f)),
-                    minimum = Offset(.1f, .1f),
-                    maximum = Offset(1f, 1f)
-                ),
+                velocity = generateRandomOffset(min = Offset(10f, 10f), max = Offset(50f, 50f)),
                 rotation = ParticleRotation(
                     speed = 0f,
                     initial = 0f,
-                    minimum = 0f,
-                    maximum = 0f
                 ),
                 lifeSpan = 10f,
             )
@@ -199,6 +206,10 @@ class ParticleSystemState(
         particles.forEach { particle ->
             particle.draw(drawScope)
         }
+    }
+
+    fun addSingleParticle(particle: Particle) {
+        particles.add(particle)
     }
 }
 
