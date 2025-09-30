@@ -25,6 +25,11 @@ sealed class NavRoute(
         emoji = "\uD83C\uDFAB"
     )
 
+    data object ScratchTicketV2 : NavRoute(
+        title = "Scratch ticket v2",
+        emoji = "\uD83C\uDFAB"
+    )
+
     data object Lock : NavRoute(
         title = "Lock",
         emoji = "\uD83D\uDD12"
