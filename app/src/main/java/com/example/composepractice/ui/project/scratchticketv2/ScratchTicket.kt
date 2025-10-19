@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.copy
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -45,11 +47,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.graphics.alpha
 import androidx.core.graphics.get
+import androidx.core.graphics.scaleMatrix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -98,8 +103,6 @@ fun ScratchTicket(
         },
     )
     val hapticFeedback = LocalHapticFeedback.current
-
-    scratchState.density = LocalDensity.current
     scratchState.haptics = hapticFeedback
 
     LaunchedEffect(scratchState.isAnimatedRevealing.value) {
@@ -139,15 +142,16 @@ fun ScratchTicket(
 
 @Composable
 fun rememberScratchState(
-    scratchStrokeWidth: Float = 50f,
+    scratchStrokeWidth: Dp = 25.dp,
     @FloatRange(from = 0.0, to = 1.0) threshold: Float = .5f,
     initialRevealState: Boolean = false,
     onThresholdReached: (progress: Float, scratchState: ScratchState) -> Unit = { _, _ -> },
     onRevealed: () -> Unit = {}
 ): ScratchState {
+    val density = LocalDensity.current
     return remember {
         ScratchState(
-            scratchStrokeWidth = scratchStrokeWidth,
+            scratchStrokeWidth = with(density) { scratchStrokeWidth.toPx() },
             threshold = threshold,
             revealed = initialRevealState,
             onThresholdReached = onThresholdReached,
@@ -178,7 +182,6 @@ class ScratchState(
         private set
     var startedScratching: MutableState<Boolean> = mutableStateOf(false)
 
-    internal var density: Density? = null
     internal var haptics: androidx.compose.ui.hapticfeedback.HapticFeedback? = null
     internal var scratchOverlayAlpha: MutableState<Float> = mutableFloatStateOf(1f)
     internal val isAnimatedRevealing: MutableState<Boolean> = mutableStateOf(false)
@@ -326,8 +329,8 @@ class ScratchState(
     private fun checkOrCreateBitmap() {
         if (progressBitmap == null && localLayoutCoordinates != null) {
             val bitmap = ImageBitmap(
-                localLayoutCoordinates!!.size.width,
-                localLayoutCoordinates!!.size.height,
+                localLayoutCoordinates!!.size.width / BITMAP_DOWNSCALE,
+                localLayoutCoordinates!!.size.height / BITMAP_DOWNSCALE,
             )
             val canvas = Canvas(bitmap)
 
@@ -341,17 +344,26 @@ class ScratchState(
 
         progressBitmap?.let { bitmap ->
             progressCanvas?.let { canvas ->
+                val scaleMatrix = Matrix().apply {
+                    scale(
+                        x = 1f / BITMAP_DOWNSCALE,
+                        y = 1f / BITMAP_DOWNSCALE,
+                    )
+                }
+                val path = newPath.copy()
+                path.transform(scaleMatrix)
+
                 CanvasDrawScope().draw(
-                    density = density ?: Density(1f),
+                    density = Density(1f),
                     layoutDirection = LayoutDirection.Ltr,
                     size = Size(bitmap.width.toFloat(), bitmap.height.toFloat()),
                     canvas = canvas
                 ) {
                     drawPath(
-                        path = newPath,
+                        path = path,
                         color = Color.Black,
                         style = Stroke(
-                            width = scratchStrokeWidth,
+                            width = scratchStrokeWidth / BITMAP_DOWNSCALE,
                             cap = StrokeCap.Round,
                             join = StrokeJoin.Round
                         )
@@ -431,6 +443,10 @@ class ScratchState(
         }
 
         return path
+    }
+
+    companion object {
+        private const val BITMAP_DOWNSCALE = 10
     }
 }
 
