@@ -35,6 +35,10 @@ sealed class NavRoute(
         emoji = "\uD83D\uDD12"
     )
 
+    data object GiantResponse : NavRoute(
+        title = "Giant Response",
+    )
+
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =
             NavRoute::class.sealedSubclasses.mapNotNull { kClass ->

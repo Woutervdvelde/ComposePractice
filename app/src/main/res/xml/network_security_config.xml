@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+    Allow cleartext traffic (HTTP) only for the specific local domains
+    used for development, such as the Android Emulator's host machine address (10.0.2.2).
+    This is necessary because your Node.js mock server runs on HTTP.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Target the Android Emulator's local host address -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+
+        <!-- Add standard localhost IP addresses if you were testing on a physical device using port forwarding -->
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+
+    <!-- Use base configuration for all other domains (which defaults to secure HTTPS) -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
