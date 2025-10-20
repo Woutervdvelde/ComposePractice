@@ -1,18 +1,31 @@
 package com.example.composepractice.ui.project.zipper
 
 import android.graphics.BitmapFactory
+import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -20,10 +33,18 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.example.composepractice.R
 import com.example.composepractice.ui.theme.ComposePracticeTheme
+import kotlinx.coroutines.launch
+import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun ZipperScreen() {
     val resources = LocalResources.current
+    val scope = rememberCoroutineScope()
+    var zipperY by remember { mutableFloatStateOf(1f) }
+    val visualZipperY = remember { Animatable(zipperY) }
+
+    val zipperAreaHeight = 500.dp
     val denimTexture = BitmapFactory
         .decodeResource(resources, R.drawable.denim_texture)
         .asImageBitmap()
@@ -32,38 +53,98 @@ fun ZipperScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { change, dragAmount ->
+                        scope.launch {
+                            zipperY = max(zipperY + dragAmount, 1f)
+                            visualZipperY.animateTo(
+                                targetValue = zipperY,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium
+                                )
+                            )
+                        }
+                    }
+                )
+            }
             .drawWithContent {
-                val path = Path().apply {
-                    moveTo(x = size.width / 2f, y = 0f)
+                val strokeHeight = 1 // Defines the definition of each stroke height
+                val zipAreaHeightPx = zipperAreaHeight.toPx()
+                val currentZipperY = visualZipperY.value
+                val halfWidth = size.width / 2f
+
+                val controlPointYMultiplier = mapValue(
+                    inputValue = currentZipperY,
+                    inputStart = 0f,
+                    inputEnd = size.height,
+                    outputStart = 1f,
+                    outputEnd = 4f
+                )
+                val controlPointY = min(zipAreaHeightPx / controlPointYMultiplier, zipAreaHeightPx)
+
+                val leftZipper = Path().apply {
+                    moveTo(x = 0f, y = currentZipperY - zipAreaHeightPx)
                     cubicTo(
-                        size.width / 4f, size.height / 2f,
-                        size.width - (size.width / 4f), size.height / 2f,
-                        size.width / 2f, size.height
+                        0f, currentZipperY - (zipAreaHeightPx / 2f),
+                        halfWidth, currentZipperY - controlPointY,
+                        halfWidth, currentZipperY
                     )
-                }
-                val pathMeasure = PathMeasure().apply {
-                    setPath(path = path, forceClosed = false)
+                    lineTo(halfWidth, currentZipperY + size.height)
                 }
 
+                val rightZipper = Path().apply {
+                    moveTo(x = size.width, y = currentZipperY - zipAreaHeightPx)
+                    cubicTo(
+                        size.width, currentZipperY - (zipAreaHeightPx / 2f),
+                        halfWidth, currentZipperY - controlPointY,
+                        halfWidth, currentZipperY
+                    )
+                    lineTo(halfWidth, currentZipperY + size.height)
+                }
+
+                val pathMeasure = PathMeasure().apply {
+                    setPath(path = rightZipper, forceClosed = false)
+                }
+                Log.e("MEOW", "height: ${size.height} - line length: ${pathMeasure.length}")
                 drawContent()
 
                 drawIntoCanvas { canvas ->
-                    drawPath(
-                        path = path,
+                    // Zipper
+                    drawCircle(
                         color = Color.Black,
-                        style = Stroke(
-                            width = 2.dp.toPx()
+                        radius = 100f,
+                        center = Offset(x = halfWidth, y = visualZipperY.value)
+                    )
+
+                    // Control point
+                    drawCircle(
+                        color = Color.Blue,
+                        radius = 50f,
+                        center = Offset(
+                            x = halfWidth,
+                            y = currentZipperY - (zipAreaHeightPx / controlPointYMultiplier)
                         )
                     )
 
-                    val strokeHeight = 1 // Defines the definition of each stroke height
-                    val width = size.width / 2f
-                    for (y in 1..size.height.toInt() / strokeHeight) {
+                    for (i in 0..size.height.toInt() / strokeHeight) {
+                        val y = i * strokeHeight
+                        val position = mapValue(
+                            inputValue = y.toFloat() + zipAreaHeightPx,
+                            inputStart = 0f,
+                            inputEnd = size.height + zipAreaHeightPx,
+                            outputStart = 0f,
+                            outputEnd = pathMeasure.length
+                        )
+
                         val x = pathMeasure
-                            .getPosition(y.toFloat()).x // Current x offset along path
+                            .getPosition(position).x // Current x offset along path
+                        Log.e("MEOW", "input: ${y.toFloat() + zipAreaHeightPx} - inputEnd ${size.height + zipAreaHeightPx} - outputEnd ${pathMeasure.length} - x ${x}")
+
 
                         val srcOffset = IntOffset(
-                            x = width.toInt(),
+                            x = halfWidth.toInt(),
                             y = y
                         )
                         val srcSize = IntSize(
@@ -84,6 +165,21 @@ fun ZipperScreen() {
                             dstSize = dstSize
                         )
                     }
+
+                    drawPath(
+                        path = leftZipper,
+                        color = Color.Red,
+                        style = Stroke(
+                            width = 2.dp.toPx()
+                        )
+                    )
+                    drawPath(
+                        path = rightZipper,
+                        color = Color.Red,
+                        style = Stroke(
+                            width = 2.dp.toPx()
+                        )
+                    )
                 }
 
             }
@@ -92,6 +188,10 @@ fun ZipperScreen() {
     }
 }
 
+fun mapValue(inputValue: Float, inputStart: Float, inputEnd: Float, outputStart: Float, outputEnd: Float): Float {
+    val ratio = (inputValue - inputStart) / (inputEnd - inputStart)
+    return outputStart + ratio * (outputEnd - outputStart)
+}
 
 @Preview
 @Composable
