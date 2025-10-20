@@ -39,6 +39,11 @@ sealed class NavRoute(
         title = "Giant Response",
     )
 
+    data object Zipper : NavRoute(
+        title = "Zipper - Hackathon Animation 2025",
+        emoji = "\uD83E\uDD10"
+    )
+
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =
             NavRoute::class.sealedSubclasses.mapNotNull { kClass ->
