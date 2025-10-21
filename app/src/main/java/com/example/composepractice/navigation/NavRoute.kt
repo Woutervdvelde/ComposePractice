@@ -10,6 +10,11 @@ sealed class NavRoute(
         title = "Home",
     )
 
+    data object Counter : NavRoute(
+        title = "Counter",
+        emoji = "\uD83E\uDDEE"
+    )
+
     data object LiveNotification : NavRoute(
         title = "Live notification",
         emoji = "\uD83D\uDCAC"
