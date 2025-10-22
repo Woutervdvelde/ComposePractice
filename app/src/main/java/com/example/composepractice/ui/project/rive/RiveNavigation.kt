@@ -1,6 +1,5 @@
 package com.example.composepractice.ui.project.rive
 
-import androidx.navigation3.runtime.entry
 import com.example.composepractice.navigation.EntryProviderInstaller
 import com.example.composepractice.navigation.NavRoute
 import com.example.composepractice.navigation.Navigator
