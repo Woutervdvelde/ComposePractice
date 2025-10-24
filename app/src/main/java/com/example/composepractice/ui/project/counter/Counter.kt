@@ -2,6 +2,7 @@ package com.example.composepractice.ui.project.counter
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,20 +22,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.composepractice.R
 import kotlinx.coroutines.delay
 
+/**
+ * Counter display for two digits. Starts animating when composed.
+ * @param start Number the animation should start at
+ * @param end The final target number the counter will land on
+ * @param flipDelay Delay between the start of each flip
+ * @param flipDuration The duration of a single flip
+ * @param flipEasing Easing function for the flip animation
+ */
 @Composable
 fun Counter(
-    day: Int,
+    start: Int,
+    end: Int,
     modifier: Modifier = Modifier,
-    start: Int = 21,
-    end: Int = 8,
-    textStyle: TextStyle = MaterialTheme.typography.headlineMedium.copy(fontSize = 48.sp),
+    flipDelay: Float = 250f,
+    flipDuration: Float = 1000f,
+    flipEasing: Easing = EaseInOut
 ) {
     val tens = mutableListOf<Int>()
     val ones = mutableListOf<Int>()
@@ -46,10 +54,16 @@ fun Counter(
 
     Row(modifier = modifier) {
         SingleCounter(
-            animationList = tens
+            animationList = tens,
+            flipDelay = flipDelay,
+            flipDuration = flipDuration,
+            flipEasing = flipEasing
         )
         SingleCounter(
-            animationList = ones
+            animationList = ones,
+            flipDelay = flipDelay,
+            flipDuration = flipDuration,
+            flipEasing = flipEasing
         )
     }
 }
@@ -57,11 +71,11 @@ fun Counter(
 @Composable
 private fun SingleCounter(
     animationList: List<Int>,
+    flipDelay: Float,
+    flipDuration: Float,
+    flipEasing: Easing,
     modifier: Modifier = Modifier
 ) {
-    val flipDelay = 250
-    val flipDuration = 1000f
-
     Box(contentAlignment = Alignment.TopCenter, modifier = modifier) {
         CountdownCard(day = animationList.first())
         CountdownCardRing(modifier.graphicsLayer { translationY = -8.dp.toPx() })
@@ -73,7 +87,8 @@ private fun SingleCounter(
                 number = number,
                 index = index,
                 flipDelay = flipDelay,
-                flipDuration = flipDuration
+                flipDuration = flipDuration,
+                flipEasing = flipEasing
             )
         }
     }
@@ -83,8 +98,9 @@ private fun SingleCounter(
 fun AnimatedCountdownCard(
     number: Int,
     index: Int,
-    flipDelay: Int,
-    flipDuration: Float
+    flipDelay: Float,
+    flipDuration: Float,
+    flipEasing: Easing
 ) {
     val rotationX = remember { Animatable(270f) }
 
@@ -96,7 +112,7 @@ fun AnimatedCountdownCard(
             targetValue = 0f,
             animationSpec = tween(
                 durationMillis = flipDuration.toInt(),
-                easing = EaseInOut
+                easing = flipEasing
             )
         )
     }
@@ -149,7 +165,8 @@ private fun CounterPreview() {
         modifier = Modifier.fillMaxSize()
     ) {
         Counter(
-            day = 1
+            start = 21,
+            end = 7,
         )
     }
 }
