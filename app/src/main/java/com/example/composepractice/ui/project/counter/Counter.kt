@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,10 +25,11 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.composepractice.R
-import kotlinx.coroutines.delay
 
 /**
  * Counter display for two digits. Starts animating when composed.
@@ -88,7 +91,7 @@ private fun SingleCounter(
                 index = index,
                 flipDelay = flipDelay,
                 flipDuration = flipDuration,
-                flipEasing = flipEasing
+                flipEasing = flipEasing,
             )
         }
     }
@@ -100,18 +103,19 @@ fun AnimatedCountdownCard(
     index: Int,
     flipDelay: Float,
     flipDuration: Float,
-    flipEasing: Easing
+    flipEasing: Easing,
 ) {
     val rotationX = remember { Animatable(270f) }
+    val zIndex by remember { derivedStateOf { if (rotationX.value > 90f) -index.toFloat() else 0f } }
 
     LaunchedEffect(number) {
         val startDelay = index * flipDelay
-        delay(startDelay.toLong())
 
         rotationX.animateTo(
             targetValue = 0f,
             animationSpec = tween(
                 durationMillis = flipDuration.toInt(),
+                delayMillis = startDelay.toInt(),
                 easing = flipEasing
             )
         )
@@ -119,10 +123,12 @@ fun AnimatedCountdownCard(
 
     CountdownCard(
         day = number,
-        modifier = Modifier.graphicsLayer {
-            transformOrigin = TransformOrigin(0.5f, 0f)
-            this.rotationX = rotationX.value
-        }
+        modifier = Modifier
+            .graphicsLayer {
+                transformOrigin = TransformOrigin(0.5f, 0f)
+                this.rotationX = rotationX.value
+            }
+            .zIndex(zIndex)
     )
 }
 
@@ -139,7 +145,7 @@ private fun CountdownCard(day: Int, modifier: Modifier = Modifier) {
         )
 
         Text(
-            modifier = Modifier.offset(y = 10.dp),
+            modifier = Modifier.offset { IntOffset(x = 0, y = 10.dp.roundToPx()) },
             text = day.toString(),
             fontSize = 48.sp,
             color = Color.Black

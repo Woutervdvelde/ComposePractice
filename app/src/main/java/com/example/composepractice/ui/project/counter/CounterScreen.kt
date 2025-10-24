@@ -22,7 +22,12 @@ fun CounterScreen() {
                 .background(FramnaGreen)
                 .padding(contentPadding)
         ) {
-            Counter(day = 1)
+            Counter(
+                start = 99,
+                end = 1,
+                flipDuration = 1000f,
+                flipDelay = 100f
+            )
         }
     }
 }
