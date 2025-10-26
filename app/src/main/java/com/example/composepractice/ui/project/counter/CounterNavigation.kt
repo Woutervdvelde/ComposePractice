@@ -1,4 +1,4 @@
-package com.example.composepractice.ui.project.livenotification
+package com.example.composepractice.ui.project.counter
 
 import com.example.composepractice.navigation.EntryProviderInstaller
 import com.example.composepractice.navigation.NavRoute
@@ -11,13 +11,13 @@ import dagger.multibindings.IntoSet
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
-object LiveNotificationModule {
+object CounterNavigation {
 
     @IntoSet
     @Provides
     fun provideEntryProviderInstaller(navigator: Navigator): EntryProviderInstaller = {
-        entry<NavRoute.LiveNotification> {
-            LiveNotification()
+        entry<NavRoute.Counter> {
+            CounterScreen()
         }
     }
 }
