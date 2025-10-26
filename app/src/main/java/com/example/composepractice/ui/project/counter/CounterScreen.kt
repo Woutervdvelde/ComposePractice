@@ -9,7 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.composepractice.ui.theme.FramnaGreen
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun CounterScreen() {
@@ -19,7 +19,7 @@ fun CounterScreen() {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .background(FramnaGreen)
+                .background(Color.Black)
                 .padding(contentPadding)
         ) {
             Counter(

@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -46,7 +47,8 @@ fun Counter(
     modifier: Modifier = Modifier,
     flipDelay: Float = 250f,
     flipDuration: Float = 1000f,
-    flipEasing: Easing = EaseInOut
+    flipEasing: Easing = EaseInOut,
+    textStyle: TextStyle = TextStyle.Default.copy(fontSize = 48.sp)
 ) {
     val tens = mutableListOf<Int>()
     val ones = mutableListOf<Int>()
@@ -55,18 +57,23 @@ fun Counter(
         ones += n % 10
     }
 
-    Row(modifier = modifier) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
         SingleCounter(
             animationList = tens,
             flipDelay = flipDelay,
             flipDuration = flipDuration,
-            flipEasing = flipEasing
+            flipEasing = flipEasing,
+            textStyle = textStyle
         )
         SingleCounter(
             animationList = ones,
             flipDelay = flipDelay,
             flipDuration = flipDuration,
-            flipEasing = flipEasing
+            flipEasing = flipEasing,
+            textStyle = textStyle
         )
     }
 }
@@ -77,10 +84,14 @@ private fun SingleCounter(
     flipDelay: Float,
     flipDuration: Float,
     flipEasing: Easing,
+    textStyle: TextStyle,
     modifier: Modifier = Modifier
 ) {
     Box(contentAlignment = Alignment.TopCenter, modifier = modifier) {
-        CountdownCard(day = animationList.first())
+        CountdownCard(
+            day = animationList.first(),
+            textStyle = textStyle
+        )
         CountdownCardRing(modifier.graphicsLayer { translationY = -8.dp.toPx() })
         animationList.forEachIndexed { index, number ->
             val previous = animationList.getOrNull(index - 1)
@@ -92,6 +103,7 @@ private fun SingleCounter(
                 flipDelay = flipDelay,
                 flipDuration = flipDuration,
                 flipEasing = flipEasing,
+                textStyle = textStyle
             )
         }
     }
@@ -104,6 +116,7 @@ fun AnimatedCountdownCard(
     flipDelay: Float,
     flipDuration: Float,
     flipEasing: Easing,
+    textStyle: TextStyle
 ) {
     val rotationX = remember { Animatable(270f) }
     val zIndex by remember { derivedStateOf { if (rotationX.value > 90f) -index.toFloat() else 0f } }
@@ -123,6 +136,7 @@ fun AnimatedCountdownCard(
 
     CountdownCard(
         day = number,
+        textStyle = textStyle,
         modifier = Modifier
             .graphicsLayer {
                 transformOrigin = TransformOrigin(0.5f, 0f)
@@ -133,7 +147,11 @@ fun AnimatedCountdownCard(
 }
 
 @Composable
-private fun CountdownCard(day: Int, modifier: Modifier = Modifier) {
+private fun CountdownCard(
+    day: Int,
+    textStyle: TextStyle,
+    modifier: Modifier = Modifier
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -147,7 +165,7 @@ private fun CountdownCard(day: Int, modifier: Modifier = Modifier) {
         Text(
             modifier = Modifier.offset { IntOffset(x = 0, y = 10.dp.roundToPx()) },
             text = day.toString(),
-            fontSize = 48.sp,
+            style = textStyle,
             color = Color.Black
         )
     }
