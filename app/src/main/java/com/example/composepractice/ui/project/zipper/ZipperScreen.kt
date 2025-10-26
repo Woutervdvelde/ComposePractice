@@ -128,43 +128,43 @@ fun ZipperScreen() {
                         )
                     )
 
-                    for (i in 0..size.height.toInt() / strokeHeight) {
-                        val y = i * strokeHeight
-                        val position = mapValue(
-                            inputValue = y.toFloat() + zipAreaHeightPx,
-                            inputStart = 0f,
-                            inputEnd = size.height + zipAreaHeightPx,
-                            outputStart = 0f,
-                            outputEnd = pathMeasure.length
-                        )
-
-                        val x = pathMeasure
-                            .getPosition(position).x // Current x offset along path
-                        Log.e("MEOW", "input: ${y.toFloat() + zipAreaHeightPx} - inputEnd ${size.height + zipAreaHeightPx} - outputEnd ${pathMeasure.length} - x ${x}")
-
-
-                        val srcOffset = IntOffset(
-                            x = halfWidth.toInt(),
-                            y = y
-                        )
-                        val srcSize = IntSize(
-                            width = denimTexture.width,
-                            height = strokeHeight
-                        )
-                        val dstSize = srcSize
-                        val dstOffset = IntOffset(
-                            x = x.toInt(),
-                            y = y
-                        )
-
-                        drawImage(
-                            image = denimTexture,
-                            srcSize = srcSize,
-                            srcOffset = srcOffset,
-                            dstOffset = dstOffset,
-                            dstSize = dstSize
-                        )
-                    }
+//                    for (i in 0..size.height.toInt() / strokeHeight) {
+//                        val y = i * strokeHeight
+//                        val position = mapValue(
+//                            inputValue = y.toFloat() + zipAreaHeightPx,
+//                            inputStart = 0f,
+//                            inputEnd = size.height + zipAreaHeightPx,
+//                            outputStart = 0f,
+//                            outputEnd = pathMeasure.length
+//                        )
+//
+//                        val x = pathMeasure
+//                            .getPosition(position).x // Current x offset along path
+//                        Log.e("MEOW", "input: ${y.toFloat() + zipAreaHeightPx} - inputEnd ${size.height + zipAreaHeightPx} - outputEnd ${pathMeasure.length} - x ${x}")
+//
+//
+//                        val srcOffset = IntOffset(
+//                            x = halfWidth.toInt(),
+//                            y = y
+//                        )
+//                        val srcSize = IntSize(
+//                            width = denimTexture.width,
+//                            height = strokeHeight
+//                        )
+//                        val dstSize = srcSize
+//                        val dstOffset = IntOffset(
+//                            x = x.toInt(),
+//                            y = y
+//                        )
+//
+//                        drawImage(
+//                            image = denimTexture,
+//                            srcSize = srcSize,
+//                            srcOffset = srcOffset,
+//                            dstOffset = dstOffset,
+//                            dstSize = dstSize
+//                        )
+//                    }
 
                     drawPath(
                         path = leftZipper,
