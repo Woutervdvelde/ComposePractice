@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.androidx.graphics.shapes)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material.icons)
 
     // Navigation 3
     implementation(libs.androidx.navigation3.ui)
@@ -73,6 +74,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
 
     implementation(libs.hilt.android)
+    implementation(libs.androidx.compose.ui.graphics)
     ksp(libs.hilt.compiler)
 
     implementation(libs.retrofit.core)
@@ -93,5 +95,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.startup)
     implementation(libs.rive)
+    implementation(libs.lottie)
     implementation(kotlin("reflect"))
 }

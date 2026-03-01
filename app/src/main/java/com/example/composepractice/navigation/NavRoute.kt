@@ -54,6 +54,11 @@ sealed class NavRoute(
         emoji = "❄\uFE0F"
     )
 
+    data object GradientAnimation : NavRoute(
+        title = "Gradient Animation",
+        emoji = "\uD83C\uDF08"
+    )
+
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =
             NavRoute::class.sealedSubclasses.mapNotNull { kClass ->
