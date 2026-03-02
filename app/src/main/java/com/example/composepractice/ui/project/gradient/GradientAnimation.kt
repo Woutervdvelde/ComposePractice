@@ -1,12 +1,14 @@
 package com.example.composepractice.ui.project.gradient
 
 import android.graphics.BlurMaskFilter
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.KeyframesSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
@@ -31,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -82,8 +85,22 @@ internal fun GradientAnimation() {
                     circle = GradientCircles[4],
                     infiniteTransition = infiniteTransition
                 )
-
-
+                
+                val backgroundColor by infiniteTransition.animateColor(
+                    initialValue = Color(0xFF0D603D),
+                    targetValue = Color(0xFF0D603D),
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = (239 * MS_PER_FRAME).toInt()
+                            
+                            Color(0xFF0D603D) at (0 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.01f, 0f, 0.667f, 1.054f)
+                            Color(0xFF005732) at (26 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.333f, 0.059f, 0.667f, 1f)
+                            Color(0xFF279968) at (164 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.333f, 0f, 0.667f, 1f)
+                            Color(0xFF0D603D) at (239 * MS_PER_FRAME).toInt() using LinearEasing
+                        }
+                    )
+                )
+                
                 Canvas(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -92,6 +109,8 @@ internal fun GradientAnimation() {
                     val scaleX = size.width / originalWidth
                     val scaleY = size.height / originalHeight
 
+                    drawRect(color = backgroundColor)
+                    
                     withTransform({
                         scale(scaleX, scaleY, pivot = Offset.Zero)
                     }) {
@@ -155,8 +174,6 @@ fun KeyframesSpec.KeyframesSpecConfig<Float>.buildFromSteps(
 @Immutable
 data class GradientCircle(
     val size: Float,
-    val xOffset: Float,
-    val yOffset: Float,
     @param:ColorInt val color: Int,
     val xAnimationSteps: List<AnimationStep>,
     val yAnimationSteps: List<AnimationStep>,

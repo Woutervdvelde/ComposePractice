@@ -7,8 +7,6 @@ val GradientCircles = listOf(
     // Dark 1
     GradientCircle(
         size = 913.781f,
-        xOffset = -196.89f,
-        yOffset = -199.11f,
         color = 0xFF125C30.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(39.11f, 0, CubicBezierEasing(0.259f, -5.405f, 0.474f, -0.643f)),
@@ -36,8 +34,6 @@ val GradientCircles = listOf(
     // Light 1
     GradientCircle(
         size = 913.78f,
-        xOffset = 412.48f,
-        yOffset = 811.28f,
         color = 0xFF00D078.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(1508.11f, 0, CubicBezierEasing(0.693f, 0f, 0.744f, 1.056f)),
@@ -62,8 +58,6 @@ val GradientCircles = listOf(
     // Medium
     GradientCircle(
         size = 913.78f,
-        xOffset = 412.48f,
-        yOffset = 811.28f,
         color = 0xFF125C30.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(1796.0f, 0, CubicBezierEasing(0.26f, 0.984f, 0.804f, 2.971f)),
@@ -92,8 +86,6 @@ val GradientCircles = listOf(
     // Light 2
     GradientCircle(
         size = 913.78f,
-        xOffset = 412.48f,
-        yOffset = 811.28f,
         color = 0xFF00D078.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(184.75f, 0, CubicBezierEasing(0.693f, 0f, 0.436f, 0.762f)),
@@ -120,8 +112,6 @@ val GradientCircles = listOf(
     // Dark 2
     GradientCircle(
         size = 913.78f,
-        xOffset = -196.89f,
-        yOffset = -199.11f,
         color = 0xFF125C30.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(39.11f, 0, CubicBezierEasing(0.271f, -0.68f, 0.738f, 1.048f)),
