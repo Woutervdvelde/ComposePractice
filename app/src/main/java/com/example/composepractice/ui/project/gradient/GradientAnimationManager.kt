@@ -9,6 +9,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -29,7 +30,7 @@ fun rememberGradientAnimationManager(
         )
     }
 
-    val backgroundColor by infiniteTransition.animateColor(
+    val backgroundColor = infiniteTransition.animateColor(
         initialValue = Color(0xFF0D603D),
         targetValue = Color(0xFF0D603D),
         animationSpec = infiniteRepeatable(
@@ -68,13 +69,13 @@ fun rememberGradientAnimationManager(
     }
 }
 
-data class GradientAnimationManager(
+class GradientAnimationManager(
     val circleStates: List<GradientCircleAnimationState>,
-    val backgroundColor: Color
+    val backgroundColor: State<Color>
 ) {
-    fun DrawScope.drawCircles() {
-        drawIntoCanvas { canvas ->
-            circleStates.asReversed().forEach { (circle, x, y, scale) ->
+    fun drawCircles(scope: DrawScope) {
+        scope.drawIntoCanvas { canvas ->
+            circleStates.forEach { (circle, x, y, scale) ->
                 canvas.nativeCanvas.drawCircle(
                     x.value,
                     y.value,
@@ -85,8 +86,8 @@ data class GradientAnimationManager(
         }
     }
     
-    fun DrawScope.drawBackground() {
-        drawRect(color = backgroundColor)
+    fun drawBackground(scope: DrawScope) {
+        scope.drawRect(color = backgroundColor.value)
     }
 
     companion object {

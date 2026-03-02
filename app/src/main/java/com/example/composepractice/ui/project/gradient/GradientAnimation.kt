@@ -48,7 +48,7 @@ internal fun GradientAnimationScreen() {
             } else {
                 val infiniteTransition = rememberInfiniteTransition()
                 val gradientAnimationManager = rememberGradientAnimationManager(
-                    gradientCircles = GradientCircles,
+                    gradientCircles = GradientCircles.asReversed(),
                     infiniteTransition = infiniteTransition
                 )
 
@@ -66,12 +66,12 @@ internal fun GradientAnimationScreen() {
                     val scaleX = size.width / originalWidth
                     val scaleY = size.height / originalHeight
         
-                    gradientAnimationManager.drawBackground()
+                    gradientAnimationManager.drawBackground(this)
 
                     withTransform({
                         scale(scaleX, scaleY, pivot = Offset.Zero)
                     }) {
-                        gradientAnimationManager.drawCircles()
+                        gradientAnimationManager.drawCircles(this)
                     }
                 }
             }
