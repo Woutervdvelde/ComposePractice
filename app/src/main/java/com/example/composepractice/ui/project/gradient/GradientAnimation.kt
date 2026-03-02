@@ -62,7 +62,7 @@ internal fun GradientAnimation() {
                     circle = GradientCircles[0],
                     infiniteTransition = infiniteTransition
                 )
-                
+
                 val circle2 = rememberGradientCircleAnimationState(
                     circle = GradientCircles[1],
                     infiniteTransition = infiniteTransition
@@ -95,48 +95,20 @@ internal fun GradientAnimation() {
                     withTransform({
                         scale(scaleX, scaleY, pivot = Offset.Zero)
                     }) {
-                        
+
                         drawIntoCanvas { canvas ->
-                            canvas.nativeCanvas.drawCircle(
-                                circle1.x.value,
-                                circle1.y.value,
-                                (circle1.circle.size / 2f) * circle1.scale.value,
-                                circle1.circle.paint
-                            )
-
-                            circle2.let { circle ->
+                            listOf(
+                                circle1,
+                                circle2,
+                                circle3,
+                                circle4,
+                                circle5
+                            ).asReversed().forEach { (circle, x, y, scale) ->
                                 canvas.nativeCanvas.drawCircle(
-                                    circle.x.value,
-                                    circle.y.value,
-                                    (circle.circle.size / 2f) * circle.scale.value,
-                                    circle.circle.paint
-                                )
-                            }
-
-                            circle3.let { circle ->
-                                canvas.nativeCanvas.drawCircle(
-                                    circle.x.value,
-                                    circle.y.value,
-                                    (circle.circle.size / 2f) * circle.scale.value,
-                                    circle.circle.paint
-                                )
-                            }
-                            
-                            circle4.let { circle ->
-                                canvas.nativeCanvas.drawCircle(
-                                    circle.x.value,
-                                    circle.y.value,
-                                    (circle.circle.size / 2f) * circle.scale.value,
-                                    circle.circle.paint
-                                )
-                            }
-
-                            circle5.let { circle ->
-                                canvas.nativeCanvas.drawCircle(
-                                    circle.x.value,
-                                    circle.y.value,
-                                    (circle.circle.size / 2f) * circle.scale.value,
-                                    circle.circle.paint
+                                    x.value,
+                                    y.value,
+                                    (circle.size / 2f) * scale.value,
+                                    circle.paint
                                 )
                             }
                         }
@@ -165,18 +137,18 @@ internal fun GradientAnimation() {
 }
 
 private const val MS_PER_FRAME = 1000f / 24 // 24 fps
+
 // 500 is almost equivalent to the 1000 value (source, gemini)
 private val BLUR_MASK_FILTER = BlurMaskFilter(500f, BlurMaskFilter.Blur.NORMAL)
 
 fun KeyframesSpec.KeyframesSpecConfig<Float>.buildFromSteps(
     steps: List<AnimationStep>,
-    offset: Float = 0f
 ) {
     durationMillis = (steps.last().frame * MS_PER_FRAME).toInt()
 
     steps.forEach { (value, frame, easing) ->
         val timeStamp = (frame * MS_PER_FRAME).toInt()
-        value - (offset) at timeStamp using easing
+        value at timeStamp using easing
     }
 }
 
@@ -216,7 +188,6 @@ fun rememberGradientCircleAnimationState(
             animation = keyframes {
                 buildFromSteps(
                     steps = circle.xAnimationSteps,
-                    offset = circle.xOffset
                 )
             }
         )
@@ -229,7 +200,6 @@ fun rememberGradientCircleAnimationState(
             animation = keyframes {
                 buildFromSteps(
                     steps = circle.yAnimationSteps,
-                    offset = circle.yOffset
                 )
             }
         )

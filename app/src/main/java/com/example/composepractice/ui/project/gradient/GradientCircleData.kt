@@ -38,7 +38,7 @@ val GradientCircles = listOf(
         size = 913.78f,
         xOffset = 412.48f,
         yOffset = 811.28f,
-        color = 0xFF00CFAE.toInt(),
+        color = 0xFF00D078.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(1508.11f, 0, CubicBezierEasing(0.693f, 0f, 0.744f, 1.056f)),
             AnimationStep(-111.48f, 73, CubicBezierEasing(0.527f, 0.111f, 0.67f, 0.866f)),
@@ -94,7 +94,7 @@ val GradientCircles = listOf(
         size = 913.78f,
         xOffset = 412.48f,
         yOffset = 811.28f,
-        color = 0xFF00CFAE.toInt(),
+        color = 0xFF00D078.toInt(),
         xAnimationSteps = listOf(
             AnimationStep(184.75f, 0, CubicBezierEasing(0.693f, 0f, 0.436f, 0.762f)),
             AnimationStep(1469.26f, 46, CubicBezierEasing(0.382f, 1.924f, 0.811f, 1.962f)),
