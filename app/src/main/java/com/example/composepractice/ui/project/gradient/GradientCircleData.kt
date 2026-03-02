@@ -148,7 +148,6 @@ data class GradientCircle(
     val paint = Paint().asFrameworkPaint().apply {
         color = this@GradientCircle.color
         isAntiAlias = true
-//        maskFilter = BLUR_MASK_FILTER
     }
 }
 

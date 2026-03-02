@@ -52,28 +52,10 @@ internal fun GradientAnimationScreen() {
                     infiniteTransition = infiniteTransition
                 )
 
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            renderEffect = android.graphics.RenderEffect.createBlurEffect(
-                                250f, 250f, Shader.TileMode.MIRROR
-                            ).asComposeRenderEffect()
-                        }
-                ) {
-                    val originalWidth = 1920f
-                    val originalHeight = 1080f
-                    val scaleX = size.width / originalWidth
-                    val scaleY = size.height / originalHeight
-        
-                    gradientAnimationManager.drawBackground(this)
-
-                    withTransform({
-                        scale(scaleX, scaleY, pivot = Offset.Zero)
-                    }) {
-                        gradientAnimationManager.drawCircles(this)
-                    }
-                }
+                GradientAnimation(
+                    gradientAnimationManager = gradientAnimationManager,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 
@@ -91,6 +73,34 @@ internal fun GradientAnimationScreen() {
                     imageVector = if (it) Icons.Outlined.Animation else Icons.Outlined.Draw,
                     contentDescription = null
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun GradientAnimation(
+    gradientAnimationManager: GradientAnimationManager,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .matchParentSize()
+                .then(gradientAnimationManager.canvasModifier)
+
+        ) {
+            val originalWidth = 1920f
+            val originalHeight = 1080f
+            val scaleX = size.width / originalWidth
+            val scaleY = size.height / originalHeight
+
+            gradientAnimationManager.drawBackground(this)
+
+            withTransform({
+                scale(scaleX, scaleY, pivot = Offset.Zero)
+            }) {
+                gradientAnimationManager.drawCircles(this)
             }
         }
     }
