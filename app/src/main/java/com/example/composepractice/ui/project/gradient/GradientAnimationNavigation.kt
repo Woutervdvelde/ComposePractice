@@ -17,7 +17,7 @@ object GradientAnimationModule {
     @Provides
     fun provideEntryProviderInstaller(navigator: Navigator): EntryProviderInstaller = {
         entry<NavRoute.GradientAnimation> {
-            GradientAnimation()
+            GradientAnimationScreen()
         }
     }
 }

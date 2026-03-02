@@ -1,7 +1,11 @@
 package com.example.composepractice.ui.project.gradient
 
+import androidx.annotation.ColorInt
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Paint
 
 val GradientCircles = listOf(
     // Dark 1
@@ -131,4 +135,25 @@ val GradientCircles = listOf(
             AnimationStep(1.52f, 239, LinearEasing)
         )
     )
+)
+
+@Immutable
+data class GradientCircle(
+    val size: Float,
+    @param:ColorInt val color: Int,
+    val xAnimationSteps: List<AnimationStep>,
+    val yAnimationSteps: List<AnimationStep>,
+    val scaleAnimationSteps: List<AnimationStep>
+) {
+    val paint = Paint().asFrameworkPaint().apply {
+        color = this@GradientCircle.color
+        isAntiAlias = true
+//        maskFilter = BLUR_MASK_FILTER
+    }
+}
+
+data class AnimationStep(
+    val value: Float,
+    val frame: Int,
+    val easing: Easing
 )

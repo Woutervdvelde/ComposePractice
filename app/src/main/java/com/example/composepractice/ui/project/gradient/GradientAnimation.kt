@@ -1,17 +1,7 @@
 package com.example.composepractice.ui.project.gradient
 
-import android.graphics.BlurMaskFilter
-import androidx.annotation.ColorInt
+import android.graphics.Shader
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.Easing
-import androidx.compose.animation.core.InfiniteTransition
-import androidx.compose.animation.core.KeyframesSpec
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -24,8 +14,6 @@ import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,11 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,7 +36,7 @@ import com.example.composepractice.R
 
 
 @Composable
-internal fun GradientAnimation() {
+internal fun GradientAnimationScreen() {
     var showLottie by remember { mutableStateOf(false) }
 
     Box {
@@ -61,76 +47,31 @@ internal fun GradientAnimation() {
                 LottieReference()
             } else {
                 val infiniteTransition = rememberInfiniteTransition()
-                val circle1 = rememberGradientCircleAnimationState(
-                    circle = GradientCircles[0],
+                val gradientAnimationManager = rememberGradientAnimationManager(
+                    gradientCircles = GradientCircles,
                     infiniteTransition = infiniteTransition
                 )
 
-                val circle2 = rememberGradientCircleAnimationState(
-                    circle = GradientCircles[1],
-                    infiniteTransition = infiniteTransition
-                )
-
-                val circle3 = rememberGradientCircleAnimationState(
-                    circle = GradientCircles[2],
-                    infiniteTransition = infiniteTransition
-                )
-
-                val circle4 = rememberGradientCircleAnimationState(
-                    circle = GradientCircles[3],
-                    infiniteTransition = infiniteTransition
-                )
-
-                val circle5 = rememberGradientCircleAnimationState(
-                    circle = GradientCircles[4],
-                    infiniteTransition = infiniteTransition
-                )
-                
-                val backgroundColor by infiniteTransition.animateColor(
-                    initialValue = Color(0xFF0D603D),
-                    targetValue = Color(0xFF0D603D),
-                    animationSpec = infiniteRepeatable(
-                        animation = keyframes {
-                            durationMillis = (239 * MS_PER_FRAME).toInt()
-                            
-                            Color(0xFF0D603D) at (0 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.01f, 0f, 0.667f, 1.054f)
-                            Color(0xFF005732) at (26 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.333f, 0.059f, 0.667f, 1f)
-                            Color(0xFF279968) at (164 * MS_PER_FRAME).toInt() using CubicBezierEasing(0.333f, 0f, 0.667f, 1f)
-                            Color(0xFF0D603D) at (239 * MS_PER_FRAME).toInt() using LinearEasing
-                        }
-                    )
-                )
-                
                 Canvas(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            renderEffect = android.graphics.RenderEffect.createBlurEffect(
+                                250f, 250f, Shader.TileMode.MIRROR
+                            ).asComposeRenderEffect()
+                        }
                 ) {
                     val originalWidth = 1920f
                     val originalHeight = 1080f
                     val scaleX = size.width / originalWidth
                     val scaleY = size.height / originalHeight
+        
+                    gradientAnimationManager.drawBackground()
 
-                    drawRect(color = backgroundColor)
-                    
                     withTransform({
                         scale(scaleX, scaleY, pivot = Offset.Zero)
                     }) {
-
-                        drawIntoCanvas { canvas ->
-                            listOf(
-                                circle1,
-                                circle2,
-                                circle3,
-                                circle4,
-                                circle5
-                            ).asReversed().forEach { (circle, x, y, scale) ->
-                                canvas.nativeCanvas.drawCircle(
-                                    x.value,
-                                    y.value,
-                                    (circle.size / 2f) * scale.value,
-                                    circle.paint
-                                )
-                            }
-                        }
+                        gradientAnimationManager.drawCircles()
                     }
                 }
             }
@@ -155,101 +96,10 @@ internal fun GradientAnimation() {
     }
 }
 
-private const val MS_PER_FRAME = 1000f / 24 // 24 fps
-
-// 500 is almost equivalent to the 1000 value (source, gemini)
-private val BLUR_MASK_FILTER = BlurMaskFilter(500f, BlurMaskFilter.Blur.NORMAL)
-
-fun KeyframesSpec.KeyframesSpecConfig<Float>.buildFromSteps(
-    steps: List<AnimationStep>,
-) {
-    durationMillis = (steps.last().frame * MS_PER_FRAME).toInt()
-
-    steps.forEach { (value, frame, easing) ->
-        val timeStamp = (frame * MS_PER_FRAME).toInt()
-        value at timeStamp using easing
-    }
-}
-
-@Immutable
-data class GradientCircle(
-    val size: Float,
-    @param:ColorInt val color: Int,
-    val xAnimationSteps: List<AnimationStep>,
-    val yAnimationSteps: List<AnimationStep>,
-    val scaleAnimationSteps: List<AnimationStep>
-) {
-    val paint = Paint().asFrameworkPaint().apply {
-        color = this@GradientCircle.color
-        isAntiAlias = true
-        maskFilter = BLUR_MASK_FILTER
-    }
-}
-
-data class GradientCircleAnimationState(
-    val circle: GradientCircle,
-    val x: State<Float>,
-    val y: State<Float>,
-    val scale: State<Float>
-)
-
-@Composable
-fun rememberGradientCircleAnimationState(
-    circle: GradientCircle,
-    infiniteTransition: InfiniteTransition
-): GradientCircleAnimationState {
-    val circleX = infiniteTransition.animateFloat(
-        initialValue = circle.xAnimationSteps.first().value,
-        targetValue = circle.xAnimationSteps.last().value,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                buildFromSteps(
-                    steps = circle.xAnimationSteps,
-                )
-            }
-        )
-    )
-
-    val circleY = infiniteTransition.animateFloat(
-        initialValue = circle.yAnimationSteps.first().value,
-        targetValue = circle.yAnimationSteps.last().value,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                buildFromSteps(
-                    steps = circle.yAnimationSteps,
-                )
-            }
-        )
-    )
-
-    val circleScale = infiniteTransition.animateFloat(
-        initialValue = circle.scaleAnimationSteps.first().value,
-        targetValue = circle.scaleAnimationSteps.last().value,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes { buildFromSteps(circle.scaleAnimationSteps) }
-        )
-    )
-
-    return remember(circle) {
-        GradientCircleAnimationState(
-            circle = circle,
-            x = circleX,
-            y = circleY,
-            scale = circleScale
-        )
-    }
-}
-
-data class AnimationStep(
-    val value: Float,
-    val frame: Int,
-    val easing: Easing
-)
-
 @Preview(widthDp = 1920, heightDp = 1080)
 @Composable
-private fun GradientAnimationPreview() {
-    GradientAnimation()
+private fun GradientAnimationScreenPreview() {
+    GradientAnimationScreen()
 }
 
 @Composable
