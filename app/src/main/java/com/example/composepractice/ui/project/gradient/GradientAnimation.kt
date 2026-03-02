@@ -1,13 +1,12 @@
 package com.example.composepractice.ui.project.gradient
 
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.renderscript.RenderScript
+import android.graphics.BlurMaskFilter
+import android.graphics.Color
+import androidx.annotation.ColorInt
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.KeyframesSpec
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
@@ -16,15 +15,15 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,19 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asComposeRenderEffect
-import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -65,70 +57,35 @@ internal fun GradientAnimation() {
             if (it) {
                 LottieReference()
             } else {
-                                val circle1XSteps = listOf(
-                    AnimationStep(39.11f, 0, CubicBezierEasing(0.259f, -5.405f, 0.474f, -0.643f)),
-                    AnimationStep(97.1f, 60, CubicBezierEasing(0.459f, -0.567f, 0.744f, 0.69f)),
-                    AnimationStep(1.66f, 99, CubicBezierEasing(0.526f, -0.093f, 0.488f, 0.942f)),
-                    AnimationStep(1158.5f, 168, CubicBezierEasing(0.36f, -0.146f, 0.696f, 0.273f)),
-                    AnimationStep(1031f, 195, CubicBezierEasing(0.525f, 0.262f, 0.895f, 0.836f)),
-                    AnimationStep(39.11f, 240, LinearEasing),
-                )
-
-                val circle1YSteps = listOf(
-                    AnimationStep(-586.53f, 0, CubicBezierEasing(0.004f, 0f, 0.746f, 0.133f)),
-                    AnimationStep(619.34f, 52, CubicBezierEasing(0.195f, 1.046f, 0.609f, 1.204f)),
-                    AnimationStep(1312.61f, 99, CubicBezierEasing(0.268f, 0.077f, 0.637f, 1.202f)),
-                    AnimationStep(-533.09f, 168, CubicBezierEasing(0.363f, 0.581f, 0.699f, 0.881f)),
-                    AnimationStep(-281.26f, 195, CubicBezierEasing(0.614f, -0.326f, 0.996f, 1f)),
-                    AnimationStep(-586.53f, 240, LinearEasing),
-                )
-
-                val fps = 24
-                val msPerFrame = 1000f / fps
-
-                fun KeyframesSpec.KeyframesSpecConfig<Float>.buildFromSteps(steps: List<AnimationStep>) {
-                    durationMillis = (steps.last().frame * msPerFrame).toInt()
-
-                    steps.forEach { (value, frame, easing) ->
-                        val timeStamp = (frame * msPerFrame).toInt()
-                        value at timeStamp using easing
-                    }
-                }
-
                 val infiniteTransition = rememberInfiniteTransition()
-                val circle1X by infiniteTransition.animateFloat(
-                    initialValue = circle1XSteps.first().value,
-                    targetValue = circle1XSteps.last().value,
-                    animationSpec = infiniteRepeatable(
-                        animation = keyframes { buildFromSteps(circle1XSteps) }
-                    )
+                val circle1 = rememberGradientCircleAnimationState(
+                    circle = GradientCircles[0],
+                    infiniteTransition = infiniteTransition
+                )
+                
+                val circle2 = rememberGradientCircleAnimationState(
+                    circle = GradientCircles[1],
+                    infiniteTransition = infiniteTransition
                 )
 
-                val circle1Y by infiniteTransition.animateFloat(
-                    initialValue = circle1YSteps.first().value,
-                    targetValue = circle1YSteps.last().value,
-                    animationSpec = infiniteRepeatable(
-                        animation = keyframes { buildFromSteps(circle1YSteps) }
-                    )
+                val circle3 = rememberGradientCircleAnimationState(
+                    circle = GradientCircles[2],
+                    infiniteTransition = infiniteTransition
                 )
 
-                val circle1 = GradientCircle(
-                    bitmap = ImageBitmap.imageResource(id = R.drawable.circle1_v2),
-                    originalSize = 914f,
-                    offsetX = -196.89f,
-                    offsetY = -199.11f
+                val circle4 = rememberGradientCircleAnimationState(
+                    circle = GradientCircles[3],
+                    infiniteTransition = infiniteTransition
                 )
 
-                         Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            renderEffect = RenderEffect.createBlurEffect(
-                                550f,
-                                550f,
-                                Shader.TileMode.CLAMP
-                            ).asComposeRenderEffect()
-                        }
+                val circle5 = rememberGradientCircleAnimationState(
+                    circle = GradientCircles[4],
+                    infiniteTransition = infiniteTransition
+                )
+
+
+                Canvas(
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     val originalWidth = 1920f
                     val originalHeight = 1080f
@@ -138,26 +95,51 @@ internal fun GradientAnimation() {
                     withTransform({
                         scale(scaleX, scaleY, pivot = Offset.Zero)
                     }) {
-                        val centerX = circle1X - (circle1.offsetX)
-                        val centerY = circle1Y - (circle1.offsetY)
-                        val centerOffset = Offset(centerX, centerY)
+                        
+                        drawIntoCanvas { canvas ->
+                            canvas.nativeCanvas.drawCircle(
+                                circle1.x.value,
+                                circle1.y.value,
+                                (circle1.circle.size / 2f) * circle1.scale.value,
+                                circle1.circle.paint
+                            )
 
-                        val animationScale = 1.52f
-                        val baseRadius = (circle1.originalSize / 2f)
-                        val finalRadius = baseRadius * animationScale
+                            circle2.let { circle ->
+                                canvas.nativeCanvas.drawCircle(
+                                    circle.x.value,
+                                    circle.y.value,
+                                    (circle.circle.size / 2f) * circle.scale.value,
+                                    circle.circle.paint
+                                )
+                            }
 
-                        val brush = Brush.radialGradient(
-                            0.0f to Color(0xFF125C30),
-                            1.0f to Color(0xFF125C30),
-                            center = centerOffset,
-                            radius = finalRadius
-                        )
+                            circle3.let { circle ->
+                                canvas.nativeCanvas.drawCircle(
+                                    circle.x.value,
+                                    circle.y.value,
+                                    (circle.circle.size / 2f) * circle.scale.value,
+                                    circle.circle.paint
+                                )
+                            }
+                            
+                            circle4.let { circle ->
+                                canvas.nativeCanvas.drawCircle(
+                                    circle.x.value,
+                                    circle.y.value,
+                                    (circle.circle.size / 2f) * circle.scale.value,
+                                    circle.circle.paint
+                                )
+                            }
 
-                        drawCircle(
-                            brush = brush,
-                            center = centerOffset,
-                            radius = finalRadius
-                        )
+                            circle5.let { circle ->
+                                canvas.nativeCanvas.drawCircle(
+                                    circle.x.value,
+                                    circle.y.value,
+                                    (circle.circle.size / 2f) * circle.scale.value,
+                                    circle.circle.paint
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -174,7 +156,7 @@ internal fun GradientAnimation() {
                 targetState = showLottie
             ) {
                 Image(
-                    imageVector = if (it) Icons.Outlined.Draw else Icons.Outlined.Animation,
+                    imageVector = if (it) Icons.Outlined.Animation else Icons.Outlined.Draw,
                     contentDescription = null
                 )
             }
@@ -182,14 +164,93 @@ internal fun GradientAnimation() {
     }
 }
 
-data class GradientCircle(
-    val bitmap: ImageBitmap,
-    val originalSize: Float,
-    val offsetX: Float,
-    val offsetY: Float
+private const val MS_PER_FRAME = 1000f / 24 // 24 fps
+// 500 is almost equivalent to the 1000 value (source, gemini)
+private val BLUR_MASK_FILTER = BlurMaskFilter(500f, BlurMaskFilter.Blur.NORMAL)
+
+fun KeyframesSpec.KeyframesSpecConfig<Float>.buildFromSteps(
+    steps: List<AnimationStep>,
+    offset: Float = 0f
 ) {
-    val size = bitmap.width
-    val scale = originalSize / size
+    durationMillis = (steps.last().frame * MS_PER_FRAME).toInt()
+
+    steps.forEach { (value, frame, easing) ->
+        val timeStamp = (frame * MS_PER_FRAME).toInt()
+        value - (offset) at timeStamp using easing
+    }
+}
+
+@Immutable
+data class GradientCircle(
+    val size: Float,
+    val xOffset: Float,
+    val yOffset: Float,
+    @param:ColorInt val color: Int,
+    val xAnimationSteps: List<AnimationStep>,
+    val yAnimationSteps: List<AnimationStep>,
+    val scaleAnimationSteps: List<AnimationStep>
+) {
+    val paint = Paint().asFrameworkPaint().apply {
+        color = this@GradientCircle.color
+        isAntiAlias = true
+        maskFilter = BLUR_MASK_FILTER
+    }
+}
+
+data class GradientCircleAnimationState(
+    val circle: GradientCircle,
+    val x: State<Float>,
+    val y: State<Float>,
+    val scale: State<Float>
+)
+
+@Composable
+fun rememberGradientCircleAnimationState(
+    circle: GradientCircle,
+    infiniteTransition: InfiniteTransition
+): GradientCircleAnimationState {
+    val circleX = infiniteTransition.animateFloat(
+        initialValue = circle.xAnimationSteps.first().value,
+        targetValue = circle.xAnimationSteps.last().value,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                buildFromSteps(
+                    steps = circle.xAnimationSteps,
+                    offset = circle.xOffset
+                )
+            }
+        )
+    )
+
+    val circleY = infiniteTransition.animateFloat(
+        initialValue = circle.yAnimationSteps.first().value,
+        targetValue = circle.yAnimationSteps.last().value,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                buildFromSteps(
+                    steps = circle.yAnimationSteps,
+                    offset = circle.yOffset
+                )
+            }
+        )
+    )
+
+    val circleScale = infiniteTransition.animateFloat(
+        initialValue = circle.scaleAnimationSteps.first().value,
+        targetValue = circle.scaleAnimationSteps.last().value,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes { buildFromSteps(circle.scaleAnimationSteps) }
+        )
+    )
+
+    return remember(circle) {
+        GradientCircleAnimationState(
+            circle = circle,
+            x = circleX,
+            y = circleY,
+            scale = circleScale
+        )
+    }
 }
 
 data class AnimationStep(
@@ -216,7 +277,7 @@ private fun LottieReference() {
 
     LottieAnimation(
         composition = backgroundComposition,
-        progress = backgroundProgress,
+        progress = { backgroundProgress },
         contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .fillMaxSize()
