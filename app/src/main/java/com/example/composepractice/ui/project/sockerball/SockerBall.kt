@@ -105,6 +105,8 @@ class SockerBallState {
 fun SockerBall(state: SockerBallState) {
     val ballSize = 50.dp
     val ballSizePx = with(LocalDensity.current) { ballSize.toPx() }
+    val friction = .98f
+    val dampening = .9f
 
     val alpha by animateFloatAsState(
         targetValue = if (state.isVisible) 1f else 0f,
@@ -123,17 +125,17 @@ fun SockerBall(state: SockerBallState) {
             var currentPos = state.position
 
             while (state.isAnimating) {
-                currentVelocity *= 0.98f // friction
+                currentVelocity *= friction
 
                 currentPos += currentVelocity
 
                 if (currentPos.x <= 0 || currentPos.x + ballSizePx >= maxWidth) {
-                    currentVelocity = currentVelocity.copy(x = -currentVelocity.x * 0.8f)
+                    currentVelocity = currentVelocity.copy(x = -currentVelocity.x * dampening)
                     currentPos = currentPos.copy(x = currentPos.x.coerceIn(0f, maxWidth - ballSizePx))
                 }
 
                 if (currentPos.y <= 0 || currentPos.y + ballSizePx >= maxHeight) {
-                    currentVelocity = currentVelocity.copy(y = -currentVelocity.y * 0.8f)
+                    currentVelocity = currentVelocity.copy(y = -currentVelocity.y * dampening)
                     currentPos = currentPos.copy(y = currentPos.y.coerceIn(0f, maxHeight - ballSizePx))
                 }
 
