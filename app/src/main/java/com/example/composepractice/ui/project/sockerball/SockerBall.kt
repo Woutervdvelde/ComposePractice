@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -27,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -121,33 +119,33 @@ fun SockerBall(state: SockerBallState) {
         LaunchedEffect(state.isAnimating) {
             if (!state.isAnimating) return@LaunchedEffect
 
-            var currentVel = state.velocity
+            var currentVelocity = state.velocity
             var currentPos = state.position
 
             while (state.isAnimating) {
-                currentVel = currentVel.times(0.99f)
+                currentVelocity *= 0.98f // friction
 
-                currentPos += currentVel
+                currentPos += currentVelocity
 
                 if (currentPos.x <= 0 || currentPos.x + ballSizePx >= maxWidth) {
-                    currentVel = currentVel.copy(x = -currentVel.x * 0.8f)
+                    currentVelocity = currentVelocity.copy(x = -currentVelocity.x * 0.8f)
                     currentPos = currentPos.copy(x = currentPos.x.coerceIn(0f, maxWidth - ballSizePx))
                 }
 
                 if (currentPos.y <= 0 || currentPos.y + ballSizePx >= maxHeight) {
-                    currentVel = currentVel.copy(y = -currentVel.y * 0.8f)
+                    currentVelocity = currentVelocity.copy(y = -currentVelocity.y * 0.8f)
                     currentPos = currentPos.copy(y = currentPos.y.coerceIn(0f, maxHeight - ballSizePx))
                 }
 
                 state.position = currentPos
 
-                if (abs(currentVel.x) < 0.1f && abs(currentVel.y) < 0.1f) {
+                if (abs(currentVelocity.x) < 0.1f && abs(currentVelocity.y) < 0.1f) {
                     delay(2000)
                     state.isVisible = false
                     state.isAnimating = false
                 }
 
-                delay(16)
+                delay(10)
             }
         }
 
@@ -157,9 +155,9 @@ fun SockerBall(state: SockerBallState) {
                     .graphicsLayer {
                         this.translationX = state.position.x
                         this.translationY = state.position.y
+                        this.alpha = alpha
                     }
                     .size(ballSize)
-                    .alpha(alpha)
                     .background(Color.Red, CircleShape)
             )
         }
