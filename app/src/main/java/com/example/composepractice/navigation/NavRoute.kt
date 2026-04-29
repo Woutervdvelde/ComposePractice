@@ -59,6 +59,11 @@ sealed class NavRoute(
         emoji = "\uD83C\uDF08"
     )
 
+    data object SockerBall : NavRoute(
+        title = "Socker ball",
+        emoji = "⚽"
+    )
+
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =
             NavRoute::class.sealedSubclasses.mapNotNull { kClass ->
