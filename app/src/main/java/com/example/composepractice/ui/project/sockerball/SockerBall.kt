@@ -29,18 +29,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.random.Random
 
 @Composable
 fun SockerBallScreen() {
     val state = remember { SockerBallState() }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
     var power by remember { mutableFloatStateOf(0.5f) }
 
     Column(
@@ -52,10 +52,7 @@ fun SockerBallScreen() {
             modifier = Modifier
                 .fillMaxWidth(.75f)
                 .fillMaxHeight(.5f)
-                .background(Color.Green)
-                .onGloballyPositioned { coordinates ->
-                    containerSize = coordinates.size
-                }
+                .background(Color(0xFF0A6419))
         ) {
             SockerBall(state)
         }
@@ -70,7 +67,7 @@ fun SockerBallScreen() {
         )
 
         Button(onClick = {
-            state.shoot(containerSize, 50, power)
+            state.shoot(50, power)
         }) {
             Text("Shoot Ball")
         }
@@ -78,18 +75,25 @@ fun SockerBallScreen() {
 }
 
 class SockerBallState {
+    private val maxSpeed = 10000f
+    private val friction = .2f
+    private val dampening = .9f
+    
+    // Set by SockerBall composable
+    var bounds by mutableStateOf(IntSize.Zero)
+    var ballSizePx by mutableFloatStateOf(0f)
+    
     var position by mutableStateOf(Offset.Zero)
     var isVisible by mutableStateOf(false)
     var isAnimating by mutableStateOf(false)
     var velocity by mutableStateOf(Offset.Zero)
 
-    fun shoot(initialBounds: IntSize, ballSize: Int, power: Float) {
-        val maxSpeed = 80f
+    fun shoot(ballSize: Int, power: Float) {
         val velocityMagnitude = maxSpeed * power.coerceIn(0f, 1f)
 
         position = Offset(
-            x = (initialBounds.width / 2f) - (ballSize / 2f),
-            y = (initialBounds.height / 2f) - (ballSize / 2f)
+            x = (bounds.width / 2f) - (ballSize / 2f),
+            y = (bounds.height / 2f) - (ballSize / 2f)
         )
 
         velocity = Offset(
@@ -100,13 +104,29 @@ class SockerBallState {
         isVisible = true
         isAnimating = true
     }
+    
+    fun next(deltaTime: Long) {
+        val dt = deltaTime / 1_000_000_000f
+        val frameFriction = friction.toDouble().pow(dt.toDouble()).toFloat()
+        
+        velocity *= frameFriction
+        position += velocity * dt
+        
+        if (position.x <= 0 || position.x + ballSizePx >= bounds.width) {
+            velocity = velocity.copy(x = -velocity.x * dampening)
+            position = position.copy(x = position.x.coerceIn(0f, bounds.width - ballSizePx))
+        }
+
+        if (position.y <= 0 || position.y + ballSizePx >= bounds.height) {
+            velocity = velocity.copy(y = -velocity.y * dampening)
+            position = position.copy(y = position.y.coerceIn(0f, bounds.height - ballSizePx))
+        }
+    }
 }
 @Composable
 fun SockerBall(state: SockerBallState) {
     val ballSize = 50.dp
     val ballSizePx = with(LocalDensity.current) { ballSize.toPx() }
-    val friction = .98f
-    val dampening = .9f
 
     val alpha by animateFloatAsState(
         targetValue = if (state.isVisible) 1f else 0f,
@@ -115,39 +135,26 @@ fun SockerBall(state: SockerBallState) {
     )
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val maxWidth = constraints.maxWidth.toFloat()
-        val maxHeight = constraints.maxHeight.toFloat()
+        state.bounds = IntSize(constraints.maxWidth, constraints.maxHeight)
+        state.ballSizePx = ballSizePx
 
         LaunchedEffect(state.isAnimating) {
             if (!state.isAnimating) return@LaunchedEffect
 
-            var currentVelocity = state.velocity
-            var currentPos = state.position
-
+            var lastFrame = 0L
             while (state.isAnimating) {
-                currentVelocity *= friction
-
-                currentPos += currentVelocity
-
-                if (currentPos.x <= 0 || currentPos.x + ballSizePx >= maxWidth) {
-                    currentVelocity = currentVelocity.copy(x = -currentVelocity.x * dampening)
-                    currentPos = currentPos.copy(x = currentPos.x.coerceIn(0f, maxWidth - ballSizePx))
+                val currentNano = awaitFrame()
+                if (lastFrame != 0L) {
+                    val frameTime = currentNano - lastFrame
+                    
+                    state.next(frameTime)
+                    if (abs(state.velocity.x) < 0.1f && abs(state.velocity.y) < 0.1f) {
+                        delay(2000)
+                        state.isVisible = false
+                        state.isAnimating = false
+                    }
                 }
-
-                if (currentPos.y <= 0 || currentPos.y + ballSizePx >= maxHeight) {
-                    currentVelocity = currentVelocity.copy(y = -currentVelocity.y * dampening)
-                    currentPos = currentPos.copy(y = currentPos.y.coerceIn(0f, maxHeight - ballSizePx))
-                }
-
-                state.position = currentPos
-
-                if (abs(currentVelocity.x) < 0.1f && abs(currentVelocity.y) < 0.1f) {
-                    delay(2000)
-                    state.isVisible = false
-                    state.isAnimating = false
-                }
-
-                delay(10)
+                lastFrame = currentNano
             }
         }
 
@@ -160,7 +167,7 @@ fun SockerBall(state: SockerBallState) {
                         this.alpha = alpha
                     }
                     .size(ballSize)
-                    .background(Color.Red, CircleShape)
+                    .background(Color.White, CircleShape)
             )
         }
     }
