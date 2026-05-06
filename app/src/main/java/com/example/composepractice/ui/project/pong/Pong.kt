@@ -18,6 +18,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import com.example.composepractice.ui.util.LockScreenOrientation
 import com.example.composepractice.ui.util.Orientation
+import kotlin.div
+import kotlin.plus
 
 @Composable
 fun PongScreen() {
@@ -25,7 +27,7 @@ fun PongScreen() {
     Pong(
         pongState = pongState,
         modifier = Modifier
-            .safeDrawingPadding()
+            .safeDrawingPadding(),
     )
 
     LockScreenOrientation(orientation = Orientation.PORTRAIT)
@@ -48,29 +50,30 @@ fun Pong(
             }
         }
     }
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color.DarkGray)
             .onSizeChanged { size ->
                 pongState.ballState.bounds = size
-                if (pongState.playerState.position == Offset.Zero) {
-                    pongState.playerState.position = Offset(size.width / 2f, size.height - 100f)
-                    pongState.aiState.position = Offset(size.width / 2f, 100f)
-                    pongState.ballState.position = Offset(size.width / 2f, size.height / 2f)
-                    pongState.ballState.velocity = Offset(400f, 400f)
-                }
+                pongState.playerState.position = pongState.playerState.position.copy(
+                    y = size.height - pongState.playerState.height,
+                )
+                pongState.reset()
             },
     ) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    detectDragGestures { change, _ ->
-                        val newX = (change.position.x - pongState.playerState.width / 2)
-                            .coerceIn(0f, size.width.toFloat() - pongState.playerState.width)
-                        pongState.playerState.position = pongState.playerState.position.copy(x = newX)
+                    detectDragGestures { change, offset ->
+                        val player = pongState.playerState
+                        val newX = (player.position.x + offset.x).coerceIn(
+                            minimumValue = 0f,
+                            maximumValue = size.width - player.width
+                        )
+                        player.position = player.position.copy(x = newX)
                     }
                 },
         ) {
@@ -90,23 +93,39 @@ fun Pong(
 
             drawCircle(
                 color = Color.White,
-                center = pongState.ballState.position + Offset(pongState.ballState.size / 2, pongState.ballState.size / 2),
+                center = pongState.ballState.getCenter(),
                 radius = pongState.ballState.size / 2,
             )
         }
     }
 }
 
-class PongState {
-    val playerState = PlayerState(maxSpeed = Float.POSITIVE_INFINITY, width = 500f)
-    val aiState = PlayerState(maxSpeed = 400f)
-    val ballState = BallState(onReset = { isPlaying = false })
+class PongState(
+    playerSize: Offset = Offset(x = 300f, y = 200f),
+    aiSize: Offset = Offset(x = 300f, y = 200f),
+    aiMaxSpeed: Float = 400f,
+    val speedIncrease: (Offset) -> Offset = { it.copy(it.x + 50f, it.y + 100f) },
+) {
+    val playerState = PlayerState(
+        maxSpeed = Float.POSITIVE_INFINITY,
+        width = playerSize.x,
+        height = aiSize.y,
+    )
+
+    val aiState = PlayerState(
+        maxSpeed = aiMaxSpeed,
+        width = aiSize.x,
+        height = aiSize.y,
+    )
+    val ballState = BallState(
+//        onReset = { isPlaying = false }
+    )
 
     private var isPlaying: Boolean = true
 
     fun update(deltaTimeNanos: Long) {
         if (!isPlaying) return
-        
+
         ballState.next(deltaTimeNanos)
 
         val aiTarget = Offset(
@@ -120,7 +139,11 @@ class PongState {
         val aiRect = Rect(aiState.position, Size(aiState.width, aiState.height))
 
         if (ballRect.overlaps(playerRect) || ballRect.overlaps(aiRect)) {
-            ballState.velocity = ballState.velocity.copy(y = -ballState.velocity.y * 1.2f)
+            when {
+                ballState.position.y - (ballState.size / 2) > playerState.position.y -> score()
+                ballState.position.y + (ballState.size / 2) < aiState.position.y + aiState.height -> score()
+                else -> ballState.velocity = speedIncrease(ballState.velocity.copy(y = -ballState.velocity.y))
+            }
         }
     }
 
@@ -130,6 +153,15 @@ class PongState {
 
     fun pause() {
         isPlaying = false
+    }
+    
+    private fun score() {
+        reset()
+    }
+    
+    fun reset() {
+        // TODO save bounds/size in PongState
+        ballState.position = Offset(ballState.bounds.width / 2f, ballState.bounds.height / 2f)
     }
 }
 
@@ -158,12 +190,12 @@ class PlayerState(
  */
 class BallState(
     val size: Float = 50f,
-    val initialVelocity: Offset = Offset(500f, 400f),
-    val onReset: () -> Unit = {}
+    val initialVelocity: Offset = Offset(500f, -400f),
+    val onReset: () -> Unit = {},
 ) {
     var bounds by mutableStateOf(IntSize.Zero)
     var position by mutableStateOf(Offset.Zero)
-    var velocity by mutableStateOf(Offset.Zero)
+    var velocity by mutableStateOf(initialVelocity)
 
     fun next(deltaTime: Long) {
         if (bounds == IntSize.Zero) return
@@ -182,4 +214,7 @@ class BallState(
             onReset()
         }
     }
+
+    fun getCenter(): Offset =
+        position + Offset(size / 2, size / 2)
 }
