@@ -41,7 +41,6 @@ fun Pong(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.DarkGray)
             .onSizeChanged { size ->
                 pongState.onBoundsChanged(size)
             },
