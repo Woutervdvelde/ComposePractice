@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalContext
@@ -62,6 +64,7 @@ fun PongScreen() {
     val coroutineScope = rememberCoroutineScope()
     val pongState = remember {
         PongState(
+            playerWidth = 300f,
             onScored = { scored ->
                 when (scored) {
                     PongState.Companion.Scored.PLAYER -> playerScore++
@@ -112,14 +115,35 @@ fun PongScreen() {
 
             rotate(90f) to rotate(-90f)
         }
-        val horizontalPadding = 16.dp
+        val horizontalPadding = 24.dp
         val horizontalPaddingPx = with(LocalDensity.current) { horizontalPadding.toPx() }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF125C30))
-                .drawBehind {
+                .drawWithContent {
+                    // Draw circle in center 1/4 of the width with a stroke of 5f
+                    drawCircle(
+                        color = Color(0xFFC2C9C5),
+                        radius = size.minDimension / 4,
+                        center = Offset(size.width / 2, size.height / 2),
+                        style = Stroke(
+                            width = 10f
+                        )
+                    )
+                    drawCircle(
+                        color = Color(0xFFC2C9C5),
+                        radius = 20f,
+                        center = Offset(size.width / 2, size.height / 2),
+                    )
+                    drawLine(
+                        color = Color(0xFFC2C9C5),
+                        start = Offset(0f, size.height / 2f),
+                        end = Offset(size.width, size.height / 2f),
+                        strokeWidth = 10f
+                    )
+
                     val bannerWidth = horizontalPaddingPx
                     val scale = bannerWidth / bitmapLeft.width
 
@@ -160,20 +184,22 @@ fun PongScreen() {
                             )
                         )
                     }
+
+                    drawContent()
                 }
         ) {
             Image(
-                painter = painterResource(R.drawable.goalpost),
+                painter = painterResource(R.drawable.goalpostv2),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .rotate(180f)
+//                    .rotate(180f)
             )
             Pong(
                 pongState = pongState,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = horizontalPadding),
             )
             Image(
                 painter = painterResource(R.drawable.goalpost),
