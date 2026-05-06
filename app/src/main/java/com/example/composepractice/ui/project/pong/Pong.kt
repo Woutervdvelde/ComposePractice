@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import com.example.composepractice.ui.util.LockScreenOrientation
+import com.example.composepractice.ui.util.Orientation
 
 @Composable
 fun PongScreen() {
@@ -25,7 +27,10 @@ fun PongScreen() {
         modifier = Modifier
             .safeDrawingPadding()
     )
+
+    LockScreenOrientation(orientation = Orientation.PORTRAIT)
 }
+
 
 @Composable
 fun Pong(
