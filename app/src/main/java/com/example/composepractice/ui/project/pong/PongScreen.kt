@@ -1,8 +1,6 @@
 package com.example.composepractice.ui.project.pong
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Matrix
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -23,30 +21,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.composepractice.R
 import com.example.composepractice.ui.util.LockScreenOrientation
@@ -74,7 +67,7 @@ fun PongScreen() {
                 coroutineScope.launch {
                     delayStart()
                 }
-            }
+            },
         )
     }
 
@@ -89,111 +82,22 @@ fun PongScreen() {
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
-        val resources = LocalResources.current
-        val (bitmapRight, bitmapLeft) = remember(resources) {
-            val original = BitmapFactory.decodeResource(resources, R.drawable.unive_banner)
-
-            fun rotate(degrees: Float): ImageBitmap {
-                val matrix = Matrix().apply {
-                    postRotate(degrees)
-                }
-
-                val rotated = Bitmap.createBitmap(
-                    original,
-                    0,
-                    0,
-                    original.width,
-                    original.height,
-                    matrix,
-                    true
-                )
-
-                return rotated.asImageBitmap()
-            }
-
-            rotate(90f) to rotate(-90f)
-        }
         val horizontalPadding = 24.dp
-        val horizontalPaddingPx = with(LocalDensity.current) { horizontalPadding.toPx() }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF125C30))
-                .drawWithContent {
-                    // Draw circle in center 1/4 of the width with a stroke of 5f
-                    drawCircle(
-                        color = Color(0xFFC2C9C5),
-                        radius = size.minDimension / 4,
-                        center = Offset(size.width / 2, size.height / 2),
-                        style = Stroke(
-                            width = 10f
-                        )
-                    )
-                    drawCircle(
-                        color = Color(0xFFC2C9C5),
-                        radius = 20f,
-                        center = Offset(size.width / 2, size.height / 2),
-                    )
-                    drawLine(
-                        color = Color(0xFFC2C9C5),
-                        start = Offset(0f, size.height / 2f),
-                        end = Offset(size.width, size.height / 2f),
-                        strokeWidth = 10f
-                    )
-
-                    val bannerWidth = horizontalPaddingPx
-                    val scale = bannerWidth / bitmapLeft.width
-
-                    val leftBrush = ShaderBrush(
-                        ImageShader(bitmapLeft, TileMode.Clamp, TileMode.Repeated)
-                    )
-
-                    val rightBrush = ShaderBrush(
-                        ImageShader(bitmapRight, TileMode.Clamp, TileMode.Repeated)
-                    )
-
-                    withTransform({
-                        scale(scale, scale, pivot = Offset.Zero)
-                    }) {
-                        drawRect(
-                            brush = leftBrush,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(
-                                bitmapLeft.width.toFloat(),
-                                size.height / scale
-                            )
-                        )
-                    }
-
-                    withTransform({
-                        scale(scale, scale, pivot = Offset.Zero)
-                        translate(
-                            (size.width - bannerWidth) / scale,
-                            0f
-                        )
-                    }) {
-                        drawRect(
-                            brush = rightBrush,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(
-                                bitmapRight.width.toFloat(),
-                                size.height / scale
-                            )
-                        )
-                    }
-
-                    drawContent()
-                }
+                .drawCourt(bannerWidth = horizontalPadding)
         ) {
             Image(
-                painter = painterResource(R.drawable.goalpostv2),
+                painter = painterResource(R.drawable.goalpost),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .rotate(180f)
+                    .rotate(180f)
             )
             Pong(
                 pongState = pongState,
@@ -204,8 +108,7 @@ fun PongScreen() {
             Image(
                 painter = painterResource(R.drawable.goalpost),
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -213,7 +116,7 @@ fun PongScreen() {
             visible = showScore,
             enter = slideInHorizontally(),
             exit = slideOutHorizontally { it },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = "$playerScore - $aiScore",
@@ -222,10 +125,88 @@ fun PongScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Black)
-                    .padding(vertical = 50.dp)
+                    .padding(vertical = 50.dp),
             )
         }
     }
 
     LockScreenOrientation(orientation = Orientation.PORTRAIT)
+}
+
+fun Modifier.drawCourt(bannerWidth: Dp) = composed {
+    val resources = LocalResources.current
+    val bitmap = remember(resources) {
+        BitmapFactory.decodeResource(resources, R.drawable.unive_banner).asImageBitmap()
+    }
+    val bannerWidthPx = with(LocalDensity.current) { bannerWidth.toPx()}
+    
+    drawBehind {
+        // Center big circle
+        drawCircle(
+            color = Color(0xFFC2C9C5),
+            radius = size.minDimension / 4,
+            center = Offset(size.width / 2, size.height / 2),
+            style = Stroke(
+                width = 10f,
+            ),
+        )
+        // Center circle
+        drawCircle(
+            color = Color(0xFFC2C9C5),
+            radius = 20f,
+            center = Offset(size.width / 2, size.height / 2),
+        )
+        // Horizontal line
+        drawLine(
+            color = Color(0xFFC2C9C5),
+            start = Offset(0f, size.height / 2f),
+            end = Offset(size.width, size.height / 2f),
+            strokeWidth = 10f,
+        )
+
+        val scale = bannerWidthPx / bitmap.width
+        val leftBrush = ShaderBrush(
+            ImageShader(bitmap, TileMode.Clamp, TileMode.Repeated),
+        )
+
+        // Left side banners
+        withTransform(
+            {
+                scale(scale, scale, pivot = Offset.Zero)
+            },
+        ) {
+            drawRect(
+                brush = leftBrush,
+                topLeft = Offset(0f, 0f),
+                size = Size(
+                    bitmap.width.toFloat(),
+                    size.height / scale,
+                ),
+            )
+        }
+
+        // Right side banners
+        withTransform(
+            {
+                scale(scale, scale, pivot = Offset.Zero)
+                translate((size.width - bannerWidthPx) / scale, 0f)
+                rotate(
+                    degrees = 180f,
+                    pivot = Offset(
+                        x = bitmap.width.toFloat() / 2f,
+                        y = (size.height / scale) / 2f
+                    )
+                )
+            },
+        ) {
+            drawRect(
+                brush = leftBrush,
+                topLeft = Offset(0f, 0f),
+                size = Size(
+                    bitmap.width.toFloat(),
+                    size.height / scale,
+                ),
+            )
+        }
+    }
 }
