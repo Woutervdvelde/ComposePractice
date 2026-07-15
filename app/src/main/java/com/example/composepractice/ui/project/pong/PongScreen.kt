@@ -7,6 +7,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,36 +56,42 @@ fun PongScreen() {
 
     var delayStart: suspend () -> Unit = {}
     val coroutineScope = rememberCoroutineScope()
-    val pongState = remember {
-        PongState(
-            playerWidth = 300f,
-            onScored = { scored ->
-                when (scored) {
-                    PongState.Companion.Scored.PLAYER -> playerScore++
-                    PongState.Companion.Scored.AI -> aiScore++
-                }
+    val density = LocalDensity.current
 
-                coroutineScope.launch {
-                    delayStart()
-                }
-            },
-        )
-    }
-
-    delayStart = {
-        pongState.pause()
-        showScore = true
-        delay(2000L)
-        showScore = false
-        delay(500L)
-        pongState.play()
-    }
-
-    Box(
+    BoxWithConstraints(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize(),
     ) {
         val horizontalPadding = 24.dp
+        val pongState = remember(density) {
+            with(density) {
+                PongState(
+                    maxHorizontalSpeed = maxWidth.toPx() * 1.5f,
+                    maxVerticalSpeed = maxHeight.toPx() * .75f,
+                    playerWidth = maxWidth.toPx() / 4f,
+                    playerMaxSpeed = maxWidth.toPx() * .9f,
+                    onScored = { scored ->
+                        when (scored) {
+                            PongState.Companion.Scored.PLAYER -> playerScore++
+                            PongState.Companion.Scored.AI -> aiScore++
+                        }
+
+                        coroutineScope.launch {
+                            delayStart()
+                        }
+                    },
+                )
+            }
+        }
+
+        delayStart = {
+            pongState.pause()
+            showScore = true
+            delay(2000L)
+            showScore = false
+            delay(500L)
+            pongState.play()
+        }
 
         Column(
             modifier = Modifier

@@ -68,6 +68,11 @@ sealed class NavRoute(
         title = "Pong",
         emoji = "🏓"
     )
+    
+    data object AnimatedTransition : NavRoute(
+        title = "Animated Transition",
+        emoji = "💨"
+    )
 
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =

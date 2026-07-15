@@ -1,7 +1,6 @@
 package com.example.composepractice.ui.project.pong
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,22 +61,28 @@ fun Pong(
 class PongState(
     val playerWidth: Float = 350f,
     val playerHeight: Float = 50f,
+    val playerMaxSpeed: Float = 700f,
     val ballSize: Float = 50f,
-    val aiMaxSpeed: Float = 700f,
     val initialBallVelocity: Offset = Offset(500f, -800f),
     val maxHorizontalSpeed: Float = 1200f,
+    val maxVerticalSpeed: Float = 1200f,
     val speedIncreaseAmount: Float = 100f,
     val onScored: (Scored) -> Unit = {},
 ) {
     private val playerState =
         PlayerState(width = playerWidth, height = playerHeight, maxSpeed = Float.POSITIVE_INFINITY)
-    private val aiState = PlayerState(width = playerWidth, height = playerHeight, maxSpeed = aiMaxSpeed)
+    private val aiState = PlayerState(width = playerWidth, height = playerHeight, maxSpeed = playerMaxSpeed)
     private val ballState = BallState(size = ballSize, initialVelocity = initialBallVelocity)
 
     private var isPlaying by mutableStateOf(true)
 
-    fun play() { isPlaying = true }
-    fun pause() { isPlaying = false }
+    fun play() {
+        isPlaying = true
+    }
+
+    fun pause() {
+        isPlaying = false
+    }
 
     internal fun onBoundsChanged(size: IntSize) {
         ballState.bounds = size
@@ -102,9 +107,9 @@ class PongState(
         val aiTarget = Offset(
             (ballState.getCenter().x - aiState.width / 2).coerceIn(
                 0f,
-                ballState.bounds.width.toFloat() - aiState.width
+                ballState.bounds.width.toFloat() - aiState.width,
             ),
-            aiState.position.y
+            aiState.position.y,
         )
         aiState.moveTo(aiTarget, deltaTimeNanos)
         checkCollision(playerState, oldBallPos, newBallPos, isPlayer = true)
@@ -116,7 +121,7 @@ class PongState(
         paddle: PlayerState,
         oldPos: Offset,
         newPos: Offset,
-        isPlayer: Boolean
+        isPlayer: Boolean,
     ) {
         val ballX = newPos.x + ballState.size / 2
         val paddleXRange = paddle.position.x..(paddle.position.x + paddle.width)
@@ -134,14 +139,17 @@ class PongState(
             val kickVelocityX = relativeIntersectX * maxHorizontalSpeed
             val newVelocityX = (ballState.velocity.x * 0.3f + kickVelocityX).coerceIn(
                 minimumValue = -maxHorizontalSpeed,
-                maximumValue = maxHorizontalSpeed
+                maximumValue = maxHorizontalSpeed,
             )
 
             val newVelocityY = if (isPlayer) {
                 -(abs(ballState.velocity.y) + speedIncreaseAmount)
             } else {
                 abs(ballState.velocity.y) + speedIncreaseAmount
-            }
+            }.coerceIn(
+                minimumValue = -maxVerticalSpeed, 
+                maximumValue = maxVerticalSpeed
+            )
 
             ballState.velocity = Offset(newVelocityX, newVelocityY)
 
@@ -165,7 +173,7 @@ class PongState(
     private fun resetBall() {
         ballState.position = Offset(
             x = ballState.bounds.width / 2f - ballState.size / 2,
-            y = ballState.bounds.height / 2f
+            y = ballState.bounds.height / 2f,
         )
         ballState.velocity = initialBallVelocity
     }

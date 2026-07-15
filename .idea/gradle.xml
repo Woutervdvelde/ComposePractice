@@ -12,7 +12,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/buildplugin" />
-            <option value="$PROJECT_DIR$/microBenchmark" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -29,4 +29,3 @@ dependencyResolutionManagement {
 rootProject.name = "ComposePractice"
 include(":app")
 include(":buildplugin")
-include(":microBenchmark")
