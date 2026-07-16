@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.example.composepractice"
         minSdk = 36
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
