@@ -73,7 +73,6 @@ internal fun AnimatedTransitionScreen() {
             ) {
                 CustomAnimatedVisibility(
                     visible = visible,
-                    outsets = LayerOutsets(22.dp),
                 ) {
                     CustomBox(text = "Custom✨")
                 }
@@ -124,7 +123,6 @@ private fun CustomBox(text: String) {
 private fun CustomAnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
-    outsets: LayerOutsets = LayerOutsets(),
     content: @Composable () -> Unit,
 ) {
     val animatedY by animateFloatAsState(
@@ -141,7 +139,6 @@ private fun CustomAnimatedVisibility(
         modifier = modifier
             .graphicsLayer {
                 this.alpha = animatedAlpha
-                this.outsets = outsets
                 this.compositingStrategy = CompositingStrategy.ModulateAlpha
             }
             .drawWithContent {
