@@ -7,7 +7,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 internal val dummyTree = ChristmasTreeData(
     ornaments = mapOf(
@@ -22,9 +24,11 @@ internal val dummyTree = ChristmasTreeData(
 fun ChristmasTreeScreen() {
     Scaffold { scaffoldPadding ->
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(scaffoldPadding)
+                .padding(horizontal = 32.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
             ChristmasTree(tree = dummyTree, modifier = Modifier)
