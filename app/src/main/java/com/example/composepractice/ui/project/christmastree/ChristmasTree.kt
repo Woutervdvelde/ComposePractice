@@ -1,7 +1,6 @@
 package com.example.composepractice.ui.project.christmastree
 
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.StartOffsetType
@@ -11,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -39,7 +38,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.composepractice.R
 import kotlin.random.Random
@@ -73,6 +71,8 @@ private val ORNAMENT_POSITIONS = mapOf<Int, DpOffset>(
 fun ChristmasTree(
     tree: ChristmasTreeData,
     modifier: Modifier = Modifier,
+    allowOrnamentPlacing: Boolean = false,
+    onOrnamentPlaced: (Int) -> Unit = { },
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -91,7 +91,13 @@ fun ChristmasTree(
         ORNAMENT_POSITIONS.forEach { (i, offset) ->
             val scaledOffset = DpOffset(offset.x * scale, offset.y * scale)
             when (val collected = tree.ornaments.get(i)) {
-                null -> OrnamentPlaceholder(position = scaledOffset, scale = scale)
+                null -> if (allowOrnamentPlacing)
+                    OrnamentPlaceholder(
+                        position = scaledOffset, 
+                        scale = scale, 
+                        onClick = { onOrnamentPlaced(i) }
+                    )
+
                 else -> Ornament(type = collected, index = i, position = scaledOffset, scale = scale)
             }
         }
@@ -109,21 +115,21 @@ fun Ornament(type: OrnamentType, index: Int, position: DpOffset, scale: Float = 
         targetValue = 4f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = ORNAMENT_ANIMATION_DURATION_MS, 
-                easing = ORNAMENT_ANIMATION_EASING
+                durationMillis = ORNAMENT_ANIMATION_DURATION_MS,
+                easing = ORNAMENT_ANIMATION_EASING,
             ),
             repeatMode = RepeatMode.Reverse,
             initialStartOffset = StartOffset(
                 offsetMillis = startingOffset,
-                offsetType = StartOffsetType.FastForward
-            )
-        )
+                offsetType = StartOffsetType.FastForward,
+            ),
+        ),
     )
-    
+
     Box(
         modifier = Modifier
             .size(DpSize(ORNAMENT_SIZE.width * scale, ORNAMENT_SIZE.height * scale))
-            .graphicsLayer { 
+            .graphicsLayer {
                 transformOrigin = TransformOrigin(0.5f, 0f)
                 translationX = position.x.toPx()
                 translationY = position.y.toPx() + (ORNAMENT_PLACEHOLDER_SIZE * scale / 2).toPx()
@@ -131,21 +137,22 @@ fun Ornament(type: OrnamentType, index: Int, position: DpOffset, scale: Float = 
             }
             .drawBehind {
                 drawOval(color = type.color)
-            }
+            },
     )
 }
 
 @Composable
-fun OrnamentPlaceholder(position: DpOffset, scale: Float = 1f) {
+fun OrnamentPlaceholder(position: DpOffset, scale: Float = 1f, onClick: () -> Unit) {
     val background = Color.Black.copy(alpha = .4f)
     val dashWidth = 3.dp * scale
     val dashSize = 5.dp * scale
-    
+
     Box(
         modifier = Modifier
             .size(ORNAMENT_PLACEHOLDER_SIZE * scale)
             .offset(x = position.x, y = position.y)
             .background(background, CircleShape)
+            .clickable(onClick = onClick)
             .drawWithContent {
                 drawContent()
                 drawCircle(
@@ -167,26 +174,31 @@ private fun ChristmasTreePreview() {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 32.dp)
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
     ) {
         ChristmasTree(
             tree = dummyTree,
+        )
+
+        ChristmasTree(
+            tree = dummyTree,
+            allowOrnamentPlacing = true
         )
     }
 }
 
 private val OrnamentType.color: Color
     get() = when (this) {
-    OrnamentType.HOUSE -> Color(0xFFE57373)          // Soft Red
-    OrnamentType.BICYCLE -> Color(0xFFFFB74D)        // Bright Orange
-    OrnamentType.HEART -> Color(0xFFF06292)          // Hot Pink
-    OrnamentType.CYBER_SHIELD -> Color(0xFF00E676)   // Cyber Neon Green
-    OrnamentType.MITTENS -> Color(0xFFBA68C8)        // Purple
-    OrnamentType.PAW -> Color(0xFFA1887F)            // Warm Brown
-    OrnamentType.CAR -> Color(0xFF64B5F6)            // Sky Blue
-    OrnamentType.SUITCASE -> Color(0xFFFFD54F)       // Yellow / Gold
-    OrnamentType.SPORT_SHOE -> Color(0xFFFF7043)     // Coral
-    OrnamentType.STREET_LANTERN -> Color(0xFF4DD0E1) // Cyan
-    OrnamentType.STAR -> Color(0xFFFFEB3B)           // Vivid Yellow
-}
+        OrnamentType.HOUSE -> Color(0xFFE57373)          // Soft Red
+        OrnamentType.BICYCLE -> Color(0xFFFFB74D)        // Bright Orange
+        OrnamentType.HEART -> Color(0xFFF06292)          // Hot Pink
+        OrnamentType.CYBER_SHIELD -> Color(0xFF00E676)   // Cyber Neon Green
+        OrnamentType.MITTENS -> Color(0xFFBA68C8)        // Purple
+        OrnamentType.PAW -> Color(0xFFA1887F)            // Warm Brown
+        OrnamentType.CAR -> Color(0xFF64B5F6)            // Sky Blue
+        OrnamentType.SUITCASE -> Color(0xFFFFD54F)       // Yellow / Gold
+        OrnamentType.SPORT_SHOE -> Color(0xFFFF7043)     // Coral
+        OrnamentType.STREET_LANTERN -> Color(0xFF4DD0E1) // Cyan
+        OrnamentType.STAR -> Color(0xFFFFEB3B)           // Vivid Yellow
+    }
