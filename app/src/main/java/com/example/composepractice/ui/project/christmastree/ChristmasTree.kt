@@ -1,6 +1,7 @@
 package com.example.composepractice.ui.project.christmastree
 
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.StartOffsetType
@@ -45,11 +46,12 @@ import kotlin.random.Random
 
 private val TREE_WIDTH_REFERENCE = 300.dp
 private val TREE_HEIGHT_REFERENCE = 417.dp
-private val TREE_MAX_WIDTH = 450.dp
+
 private val ORNAMENT_PLACEHOLDER_SIZE = 48.dp
 private val ORNAMENT_SIZE = DpSize(48.dp, 60.dp)
 private const val ORNAMENT_ANIMATION_DURATION_MS = 2000
 private val ORNAMENT_ANIMATION_EASING = CubicBezierEasing(0.5f, 0f, 0.5f, 1f)
+
 private val MIN_TOUCH_TARGET = 48.dp
 private val TREE_MIN_WIDTH = TREE_WIDTH_REFERENCE * (MIN_TOUCH_TARGET / ORNAMENT_PLACEHOLDER_SIZE)
 
@@ -74,7 +76,7 @@ fun ChristmasTree(
 ) {
     BoxWithConstraints(
         modifier = modifier
-            .widthIn(min = TREE_MIN_WIDTH, max = TREE_MAX_WIDTH)
+            .widthIn(min = TREE_MIN_WIDTH, max = TREE_WIDTH_REFERENCE)
             .fillMaxWidth()
             .aspectRatio(TREE_WIDTH_REFERENCE / TREE_HEIGHT_REFERENCE),
     ) {
@@ -121,9 +123,10 @@ fun Ornament(type: OrnamentType, index: Int, position: DpOffset, scale: Float = 
     Box(
         modifier = Modifier
             .size(DpSize(ORNAMENT_SIZE.width * scale, ORNAMENT_SIZE.height * scale))
-            .offset { IntOffset(x = position.x.roundToPx(), y = position.y.roundToPx()) }
             .graphicsLayer { 
                 transformOrigin = TransformOrigin(0.5f, 0f)
+                translationX = position.x.toPx()
+                translationY = position.y.toPx() + (ORNAMENT_PLACEHOLDER_SIZE * scale / 2).toPx()
                 rotationZ = rotation
             }
             .drawBehind {
@@ -161,13 +164,14 @@ fun OrnamentPlaceholder(position: DpOffset, scale: Float = 1f) {
 @Preview
 @Composable
 private fun ChristmasTreePreview() {
-    Column(modifier = Modifier
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 32.dp)
     ) {
         ChristmasTree(
             tree = dummyTree,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
 }

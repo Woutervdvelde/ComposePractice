@@ -16,7 +16,7 @@ internal val dummyTree = ChristmasTreeData(
         0 to OrnamentType.CYBER_SHIELD,
         1 to OrnamentType.SUITCASE,
         4 to OrnamentType.BICYCLE,
-        10 to OrnamentType.HOUSE
+        9 to OrnamentType.HOUSE
     )
 )
 
