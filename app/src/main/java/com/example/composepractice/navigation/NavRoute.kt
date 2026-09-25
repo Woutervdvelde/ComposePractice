@@ -83,6 +83,11 @@ sealed class NavRoute(
         title = "ChristmasTree",
         emoji = "🎄"
     )
+    
+    data object Math : NavRoute(
+        title = "Math",
+        emoji = "♾️"
+    )
 
     companion object {
         fun allRoutes(except: List<NavRoute>): List<NavRoute> =

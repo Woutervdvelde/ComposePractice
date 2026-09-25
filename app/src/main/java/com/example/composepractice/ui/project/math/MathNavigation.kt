@@ -1,4 +1,4 @@
-package com.example.composepractice.ui.project.lock
+package com.example.composepractice.ui.project.math
 
 import com.example.composepractice.navigation.EntryProviderInstaller
 import com.example.composepractice.navigation.NavRoute
@@ -11,13 +11,13 @@ import dagger.multibindings.IntoSet
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
-object LockNavigation {
+object MathNavigation {
 
     @IntoSet
     @Provides
     fun provideEntryProviderInstaller(navigator: Navigator): EntryProviderInstaller = {
-        entry<NavRoute.Lock> {
-            LockScreen()
+        entry<NavRoute.Math> {
+            MathScreen()
         }
     }
 }
