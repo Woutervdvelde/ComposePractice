@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.tooling.preview.Preview
@@ -131,8 +133,9 @@ fun WigglyBox(modifier: Modifier = Modifier) {
                 offset = Offset(8.dp.toPx(), 8.dp.toPx()),
                 size = Size(size.width - (16.dp.toPx()), size.height - (16.dp.toPx())),
             ),
-            waveLength = 500.dp,
-            amplitude = 10.dp,
+            waveLength = 50.dp,
+            amplitude = 2.dp,
+            style = Fill
         )
     }
 }
@@ -142,8 +145,8 @@ private fun calculateDisplacement(
     amplitude: Float,
     frequency: Float,
 ): Float {
-    val aBase = amplitude * .7f
-    val aNoise1 = amplitude * .15f
+    val aBase = amplitude * .5f
+    val aNoise1 = amplitude * .35f
     val aNoise2 = amplitude * .1f
     val aNoise3 = amplitude * .05f
 
@@ -160,6 +163,7 @@ fun DrawScope.drawWigglyBox(
     rect: Rect,
     waveLength: Dp = 200.dp,
     amplitude: Dp = 20.dp,
+    style: DrawStyle = Stroke()
 ) {
     val maxAmplitude = amplitude.toPx()
     val frequency = size.width / waveLength.toPx()
@@ -230,7 +234,7 @@ fun DrawScope.drawWigglyBox(
     }
 
     translate(left = rect.left, top = rect.top) {
-        drawPath(path = path, color = Color.White, style = Stroke())
+        drawPath(path = path, color = Color.White, style = style)
     }
 }
 
