@@ -93,7 +93,7 @@ fun RandomishWaveCanvas(modifier: Modifier = Modifier) {
         val maxAmplitude = 20.dp.toPx()
         val frequency = size.width / waveLength
         val centerY = size.height / 2f
-        
+
         val aBase = maxAmplitude * .7f
         val aNoise1 = maxAmplitude * .15f
         val aNoise2 = maxAmplitude * .1f
@@ -102,13 +102,13 @@ fun RandomishWaveCanvas(modifier: Modifier = Modifier) {
         val path = Path().apply {
             for (x in 0..size.width.toInt()) {
                 val progress = x.toFloat() / size.width
-                
+
                 val angle = progress * (2f * Math.PI.toFloat()) * frequency
                 val baseWave = sin(angle) * aBase
                 val noise1 = sin(angle * 2.71f) * aNoise1
                 val noise2 = cos(angle * 7.13f) * aNoise2
                 val noise3 = sin(angle * 19.41f) * aNoise3
-                
+
                 val totalDisplacement = baseWave + noise1 + noise2 + noise3
                 val y = centerY + totalDisplacement
 
@@ -124,49 +124,60 @@ fun RandomishWaveCanvas(modifier: Modifier = Modifier) {
 @Composable
 fun WigglyBox(modifier: Modifier = Modifier) {
     Canvas(
-        modifier = modifier.background(Color.Black)
+        modifier = modifier.background(Color.Black),
     ) {
-        translate(left = 8.dp.toPx(), top = 8.dp.toPx()) {
-            drawWigglyBox(
-                rect = Rect(
-                    offset = Offset.Zero,
-                    size = Size(size.width - (16.dp.toPx()), size.height - (16.dp.toPx()))
-                ),
-                waveLength = 500.dp,
-                amplitude = 10.dp
-            )
-        }
+        drawWigglyBox(
+            rect = Rect(
+                offset = Offset(8.dp.toPx(), 8.dp.toPx()),
+                size = Size(size.width - (16.dp.toPx()), size.height - (16.dp.toPx())),
+            ),
+            waveLength = 500.dp,
+            amplitude = 10.dp,
+        )
     }
 }
 
+private fun calculateDisplacement(
+    progress: Float,
+    amplitude: Float,
+    frequency: Float,
+): Float {
+    val aBase = amplitude * .7f
+    val aNoise1 = amplitude * .15f
+    val aNoise2 = amplitude * .1f
+    val aNoise3 = amplitude * .05f
+
+    val angle = progress * (2f * Math.PI.toFloat()) * frequency
+    val baseWave = sin(angle) * aBase
+    val noise1 = sin(angle * 2.71f) * aNoise1
+    val noise2 = cos(angle * 7.13f) * aNoise2
+    val noise3 = sin(angle * 19.41f) * aNoise3
+
+    return baseWave + noise1 + noise2 + noise3
+}
+
 fun DrawScope.drawWigglyBox(
-    rect: Rect, 
-    waveLength: Dp = 200.dp, 
-    amplitude: Dp = 20.dp
+    rect: Rect,
+    waveLength: Dp = 200.dp,
+    amplitude: Dp = 20.dp,
 ) {
     val maxAmplitude = amplitude.toPx()
     val frequency = size.width / waveLength.toPx()
-    val aBase = maxAmplitude * .7f
-    val aNoise1 = maxAmplitude * .15f
-    val aNoise2 = maxAmplitude * .1f
-    val aNoise3 = maxAmplitude * .05f
-    
-    val path = Path().apply { 
+
+    val path = Path().apply {
         var x = 0f
         var y = 0f
-        
+
         for (currentX in 0..rect.width.toInt()) {
             x = currentX.toFloat()
-           val progress =  x / rect.width
+            val progress = x / rect.width
+            val displacement = calculateDisplacement(
+                progress = progress,
+                amplitude = maxAmplitude,
+                frequency = frequency,
+            )
 
-            val angle = progress * (2f * Math.PI.toFloat()) * frequency
-            val baseWave = sin(angle) * aBase
-            val noise1 = sin(angle * 2.71f) * aNoise1
-            val noise2 = cos(angle * 7.13f) * aNoise2
-            val noise3 = sin(angle * 19.41f) * aNoise3
-    
-            val totalDisplacement = baseWave + noise1 + noise2 + noise3
-            y = 0f + totalDisplacement
+            y = 0f + displacement
 
             if (x == 0f) moveTo(x = 0f, y = y)
             else lineTo(x, y)
@@ -176,16 +187,14 @@ fun DrawScope.drawWigglyBox(
         var lastY = y
         for (currentY in lastY.toInt()..rect.height.toInt()) {
             y = currentY.toFloat()
-            val progress =  y / rect.height
+            val progress = y / rect.height
+            val displacement = calculateDisplacement(
+                progress = progress,
+                amplitude = maxAmplitude,
+                frequency = frequency,
+            )
 
-            val angle = progress * (2f * Math.PI.toFloat()) * frequency
-            val baseWave = sin(angle) * aBase
-            val noise1 = sin(angle * 2.71f) * aNoise1
-            val noise2 = cos(angle * 7.13f) * aNoise2
-            val noise3 = sin(angle * 19.41f) * aNoise3
-
-            val totalDisplacement = baseWave + noise1 + noise2 + noise3
-            x = lastX + totalDisplacement
+            x = lastX + displacement
             lineTo(x, y)
         }
 
@@ -193,38 +202,36 @@ fun DrawScope.drawWigglyBox(
         lastY = y
         for (currentX in 0..lastX.toInt()) {
             x = lastX - currentX.toFloat()
-            val progress =  x / rect.width
+            val progress = x / rect.width
+            val displacement = calculateDisplacement(
+                progress = progress,
+                amplitude = maxAmplitude,
+                frequency = frequency,
+            )
 
-            val angle = progress * (2f * Math.PI.toFloat()) * frequency
-            val baseWave = sin(angle) * aBase
-            val noise1 = sin(angle * 2.71f) * aNoise1
-            val noise2 = cos(angle * 7.13f) * aNoise2
-            val noise3 = sin(angle * 19.41f) * aNoise3
-
-            val totalDisplacement = baseWave + noise1 + noise2 + noise3
-            y = lastY + totalDisplacement
+            y = lastY + displacement
             lineTo(x, y)
         }
-        
+
         lastX = x
         lastY = y
         for (currentY in 0..lastY.toInt()) {
             y = lastY - currentY.toFloat()
-            val progress =  y / rect.height
+            val progress = y / rect.height
+            val displacement = calculateDisplacement(
+                progress = progress,
+                amplitude = maxAmplitude,
+                frequency = frequency,
+            )
 
-            val angle = progress * (2f * Math.PI.toFloat()) * frequency
-            val baseWave = sin(angle) * aBase
-            val noise1 = sin(angle * 2.71f) * aNoise1
-            val noise2 = cos(angle * 7.13f) * aNoise2
-            val noise3 = sin(angle * 19.41f) * aNoise3
-
-            val totalDisplacement = baseWave + noise1 + noise2 + noise3
-            x = lastX + totalDisplacement
+            x = lastX + displacement
             lineTo(x, y)
         }
     }
 
-    drawPath(path = path, color = Color.White, style = Stroke())
+    translate(left = rect.left, top = rect.top) {
+        drawPath(path = path, color = Color.White, style = Stroke())
+    }
 }
 
 @Preview(heightDp = 3000, widthDp = 1000)
