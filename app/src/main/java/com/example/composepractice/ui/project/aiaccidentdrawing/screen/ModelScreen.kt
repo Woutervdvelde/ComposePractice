@@ -48,7 +48,6 @@ internal fun ModelScreen(
     val scope = rememberCoroutineScope()
     var action by remember { mutableStateOf<ModelAction>(ModelAction.Idle) }
     var error by remember { mutableStateOf<String?>(null) }
-    // Bumped after a download so the model lists are read from disk again
     var refreshKey by remember { mutableIntStateOf(0) }
     val undownloadedModels = remember(refreshKey) { engine.listUndownloadedModels() }
     val downloadedModels = remember(refreshKey) { engine.listDownloadedModels() }
