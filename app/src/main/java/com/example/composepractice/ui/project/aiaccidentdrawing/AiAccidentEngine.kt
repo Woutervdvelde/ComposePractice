@@ -17,55 +17,64 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-
 private val conversationConfig = ConversationConfig(
     systemInstruction = Contents.of(
-        "You are an expert European Traffic Accident Report (Europees Schadeformulier) visual analyst." +
-                "Your task is to analyze top-down collision sketches and produce strict JSON." +
-                "---" +
-                "### Core Behavioral Directive" +
-                "- BE DECISIVE AND CONFIDENT. Assume standard European road conventions by default instead of asking questions." +
-                "- High bias toward completing the analysis: If you can reasonably infer what happened from vehicle orientation, arrows, lane markings, or impact position, mark the status as \"complete\"." +
-                "- Standard Assumptions to apply automatically:" +
-                "  1. If a vehicle strikes another from behind, assume a rear-end collision where the trailing vehicle failed to brake/maintain distance." +
-                "  2. If a vehicle is crossing/turning across a lane, assume they failed to yield to straight-moving traffic." +
-                "  3. If no priority signs or shark teeth (haaientanden) are visible at an intersection, assume default European priority rules (priority to the right)." +
-                "  4. If a vehicle is reversing, entering a road, or exiting a parking space, assume they bear responsibility." +
-                "- Clarification is an ABSOLUTE LAST RESORT: Only set status to \"needs_clarification\" if the sketch is completely illegible, lacks vehicles entirely, or presents two 100% mutually exclusive physical movements that cannot be deduced." +
-                "---" +
-                "### Rules & Formatting" +
-                "- Output STRICT, VALID JSON ONLY. No markdown ticks, no preambles." +
-                "- If status is \"complete\":" +
-                "  - Populate \"summary\", \"traffic_situation\", and \"liability\"." +
-                "  - Set \"clarification\" to null." +
-                "- If status is \"needs_clarification\":" +
-                "  - Populate \"clarification\" with a concise question (< 50 chars) and 2 to 3 concise button options (< 30 chars each)." +
-                "  - Set \"summary\", \"traffic_situation\", and \"liability\" to null." +
-                "---" +
-                "### JSON Schema" +
+        "You are a decisive European Traffic Accident Report (Europees Schadeformulier) visual analyst." +
+                "Analyze the top-down accident sketch and return a single, raw JSON object." +
+                "CRITICAL FORMATTING INSTRUCTIONS:" +
+                "- Return ONLY valid raw JSON." +
+                "- DO NOT wrap the output in markdown codeblocks (NEVER use ```json or ```)." +
+                "- Start your response directly with { and end directly with }." +
+                "- No explanations, preambles, or conversational commentary." +
+                "LANGUAGE SPECIFICATIONS:" +
+                "- Structural keys and ENUM values: STRICTLY ENGLISH." +
+                "- Dynamic user-facing text fields (\"question\", \"label\", \"summary\"): STRICTLY DUTCH." +
+                "BEHAVIOR & DEFAULT ASSUMPTIONS (BE DECISIVE):" +
+                "- Do NOT hesitate or ask unnecessary questions. Interpret the sketch assertively using standard European traffic regulations:" +
+                "  1. Rear-end collision: Trailing vehicle failed to maintain distance or stop in time." +
+                "  2. Turning vs straight traffic: Vehicle continuing straight on the same road has priority over turning vehicles." +
+                "  3. Unmarked intersections: Default to priority-to-the-right rule (\"voorrang van rechts\") if no shark teeth or signs appear." +
+                "  4. Manoeuvres (parking, reversing, U-turns, entering from an unpaved road/driveway): Manoeuvring vehicle must yield to all other traffic." +
+                "  5. Lane changes / Merging: The vehicle crossing a lane divider must yield." +
+                "  6. Roundabouts: Vehicles already on the circulatory roadway have priority unless marked otherwise." +
+                "- Set status to \"needs_clarification\" ONLY as an absolute last resort if crucial arrows or positions are completely missing or visually illegible." +
+                "JSON SCHEMA:" +
                 "{" +
                 "  \"status\": \"complete\" | \"needs_clarification\"," +
                 "  \"clarification\": null | {" +
-                "    \"question\": \"string\"," +
+                "    \"question\": \"Korte, duidelijke vraag in het Nederlands (< 50 tekens)\"," +
                 "    \"options\": [" +
-                "      {\"id\": \"opt_1\", \"label\": \"string\"}," +
-                "      {\"id\": \"opt_2\", \"label\": \"string\"}" +
+                "      {\"id\": \"opt_1\", \"label\": \"Korte knoptekst in het Nederlands (< 30 tekens)\"}," +
+                "      {\"id\": \"opt_2\", \"label\": \"Korte knoptekst in het Nederlands (< 30 tekens)\"}" +
                 "    ]" +
                 "  }," +
                 "  \"traffic_situation\": null | {" +
-                "    \"road_type\": \"Straight road\" | \"T-junction\" | \"Crossroads\" | \"Roundabout\" | \"Parking lot\"," +
-                "    \"priority_regulation\": \"Priority road\" | \"Give way / Shark teeth\" | \"Stop sign\" | \"Traffic lights\" | \"Priority to right\"" +
+                "    \"road_type\": \"STRAIGHT_ROAD\" | \"T_JUNCTION\" | \"CROSSROADS\" | \"ROUNDABOUT\" | \"HIGHWAY_MOTORWAY\" | \"HIGHWAY_ON_OFF_RAMP\" | \"PARKING_LOT\" | \"DRIVEWAY_PRIVATE_PROPERTY\" | \"BEND_CURVE\"," +
+                "    \"priority_regulation\": \"PRIORITY_ROAD\" | \"GIVE_WAY_YIELD\" | \"STOP_SIGN\" | \"TRAFFIC_LIGHTS\" | \"PRIORITY_TO_RIGHT\" | \"ROUNDABOUT_RULES\" | \"UNKNOWN_UNREGULATED\"" +
                 "  }," +
                 "  \"liability\": null | {" +
-                "    \"at_fault\": \"Vehicle A\" | \"Vehicle B\" | \"Shared / Undetermined\"," +
-                "    \"circumstance_standard_code\": \"e.g., rear-end collision, failed to yield from right, improper lane change\"" +
+                "    \"at_fault\": \"VEHICLE_A\" | \"VEHICLE_B\" | \"SHARED\" | \"UNDETERMINED\"," +
+                "    \"circumstance_code\": " +
+                "      \"REAR_END_COLLISION\" |" +
+                "      \"FAILED_TO_YIELD_FROM_RIGHT\" |" +
+                "      \"FAILED_TO_YIELD_AT_SIGN_OR_MARKING\" |" +
+                "      \"TURNING_ACROSS_OPPOSING_TRAFFIC\" |" +
+                "      \"IMPROPER_LANE_CHANGE\" |" +
+                "      \"REVERSING\" |" +
+                "      \"ENTERING_OR_LEAVING_PARKING\" |" +
+                "      \"ENTERING_ROUNDABOUT\" |" +
+                "      \"OVERTAKING_COLLISION\" |" +
+                "      \"OPENING_CAR_DOOR\" |" +
+                "      \"MERGING_HIGHWAY\"" +
                 "  }," +
-                "  \"summary\": null | \"2-3 concise, decisive sentences describing vehicle actions and the collision point.\"" +
+                "  \"summary\": null | \"Korte, feitelijke Nederlandse samenvatting (2-3 zinnen) over de toedracht en de botsing.\"" +
                 "}"
     ),
 )
@@ -89,6 +98,11 @@ val availableModels = listOf(
         name = "Gemma 4 E2B",
         url = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm?download=true",
         fileName = "gemma-4-E2B-it.litertlm",
+    ),
+    AiModel(
+        name = "Gemma 4 E4B",
+        url = "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm?download=true",
+        fileName = "gemma-4-E4B-it.litertlm",
     ),
 )
 
@@ -202,19 +216,29 @@ class AiAccidentEngine(
         awaitClose { if (!done) activeConversation.cancelProcess() }
     }
 
-    fun sendImage(bitmap: Bitmap): Flow<String> = callbackFlow {
+    fun sendImage(bitmap: Bitmap): Flow<AccidentAnalysis> = callbackFlow {
         val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
+        var response = ""
         var done = false
         activeConversation.sendMessageAsync(
             Contents.of(Content.ImageBytes(bitmap.toByteArray())),
             object : MessageCallback {
                 override fun onMessage(message: Message) {
-                    message.contents.contents.filterIsInstance<Content.Text>().forEach { trySend(it.text) }
+                    message.contents.contents.filterIsInstance<Content.Text>().forEach { 
+                        response += it.text
+                    }
                 }
 
                 override fun onDone() {
                     done = true
-                    close()
+                    try {
+                        val analysis = accidentAnalysisJson.decodeFromString<AccidentAnalysis>(response)
+                        trySend(analysis)
+                    } catch (e: Exception) {
+                        println(e)
+                    } finally {
+                        close()
+                    }
                 }
 
                 override fun onError(throwable: Throwable) {
