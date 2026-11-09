@@ -1,6 +1,7 @@
 package com.example.composepractice.ui.project.aiaccidentdrawing
 
 import android.content.Context
+import android.graphics.Bitmap
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
@@ -65,6 +67,7 @@ class AiAccidentEngine(
             EngineConfig(
                 modelPath = modelPath,
                 backend = backend,
+                visionBackend = backend
             ),
         )
         engine.initialize()
@@ -132,10 +135,6 @@ class AiAccidentEngine(
         modelFile
     }
 
-    /**
-     * Sends [message] and emits the response text chunk by chunk as the model generates it.
-     * Cancelling the collector stops the generation.
-     */
     fun sendMessage(message: String): Flow<String> = callbackFlow {
         val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
         var done = false
@@ -159,4 +158,37 @@ class AiAccidentEngine(
         )
         awaitClose { if (!done) activeConversation.cancelProcess() }
     }
+
+    fun sendImage(bitmap: Bitmap): Flow<String> = callbackFlow {
+        val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
+        var done = false
+        activeConversation.sendMessageAsync(
+            Contents.of(Content.ImageBytes(bitmap.toByteArray())),
+            object : MessageCallback {
+                override fun onMessage(message: Message) {
+                    message.contents.contents.filterIsInstance<Content.Text>().forEach { trySend(it.text) }
+                }
+
+                override fun onDone() {
+                    done = true
+                    close()
+                }
+
+                override fun onError(throwable: Throwable) {
+                    done = true
+                    close(throwable)
+                }
+            },
+        )
+        awaitClose { if (!done) activeConversation.cancelProcess() }
+    }
+}
+
+fun Bitmap.toByteArray(
+    format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
+    quality: Int = 100,
+): ByteArray {
+    val stream = ByteArrayOutputStream()
+    this.compress(format, quality, stream)
+    return stream.toByteArray()
 }
