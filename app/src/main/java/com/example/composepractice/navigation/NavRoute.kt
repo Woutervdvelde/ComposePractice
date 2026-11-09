@@ -72,6 +72,11 @@ sealed class NavRoute(
     data object AnimatedTransition : NavRoute(
         title = "Animated Transition",
         emoji = "💨"
+    )    
+    
+    data object AiAccidentDrawing : NavRoute(
+        title = "Ai Accident Drawing",
+        emoji = "🤖🎨"
     )
     
     data object CompositingStrategy : NavRoute(

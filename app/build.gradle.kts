@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     ksp(libs.moshi.kotlin.codegen)
 
+    implementation(libs.litertlm.android)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

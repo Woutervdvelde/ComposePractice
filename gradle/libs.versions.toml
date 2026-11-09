@@ -3,6 +3,7 @@ agp = "9.2.1"
 kotlin = "2.4.10"
 ksp = "2.0.21-1.0.27"
 coreKtx = "1.15.0"
+litertlmAndroid = "latest.release"
 startupRuntime = "1.1.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -51,6 +52,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-startup = { group = "androidx.startup", name = "startup-runtime", version.ref = "startupRuntime" }
 androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 
+litertlm-android = { module = "com.google.ai.edge.litertlm:litertlm-android", version.ref = "litertlmAndroid" }
 rive = { group = "app.rive", name = "rive-android", version.ref = "rive" }
 lottie = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
 
