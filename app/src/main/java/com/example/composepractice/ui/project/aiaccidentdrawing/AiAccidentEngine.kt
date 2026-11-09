@@ -190,31 +190,7 @@ class AiAccidentEngine(
         check(partialFile.renameTo(modelFile)) { "Could not save model" }
         modelFile
     }
-
-    fun sendMessage(message: String): Flow<String> = callbackFlow {
-        val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
-        var done = false
-        activeConversation.sendMessageAsync(
-            Contents.of(Content.Text(message)),
-            object : MessageCallback {
-                override fun onMessage(message: Message) {
-                    message.contents.contents.filterIsInstance<Content.Text>().forEach { trySend(it.text) }
-                }
-
-                override fun onDone() {
-                    done = true
-                    close()
-                }
-
-                override fun onError(throwable: Throwable) {
-                    done = true
-                    close(throwable)
-                }
-            },
-        )
-        awaitClose { if (!done) activeConversation.cancelProcess() }
-    }
-
+    
     fun sendImage(bitmap: Bitmap): Flow<AccidentAnalysis> = callbackFlow {
         val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
         var response = ""

@@ -88,9 +88,7 @@ internal fun AiAccidentDrawingScreen() {
                         sketch = state.sketch,
                         analysis = state.analysis,
                         onAnswer = { option ->
-                            analyze(state.sketch) {
-                                parseAnalysis(engine.sendMessage(option.label).toList().joinToString(""))
-                            }
+                            // TODO
                         },
                         onRedraw = { screen = Screen.Draw },
                     )
