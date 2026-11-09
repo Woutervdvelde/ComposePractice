@@ -102,12 +102,3 @@ internal fun AiAccidentDrawingScreen() {
         }
     }
 }
-
-private fun parseAnalysis(raw: String): AccidentAnalysis? {
-    val json = raw.trim()
-        .removePrefix("```json")
-        .removePrefix("```")
-        .removeSuffix("```")
-        .trim()
-    return runCatching { accidentAnalysisJson.decodeFromString<AccidentAnalysis>(json) }.getOrNull()
-}
