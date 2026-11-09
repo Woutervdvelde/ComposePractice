@@ -2,13 +2,19 @@ package com.example.composepractice.ui.project.aiaccidentdrawing
 
 import android.content.Context
 import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.Message
+import com.google.ai.edge.litertlm.MessageCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -63,7 +69,7 @@ class AiAccidentEngine(
         )
         engine.initialize()
         conversation = engine.createConversation(
-            conversationConfig = conversationConfig
+            conversationConfig = conversationConfig,
         )
     }
 
@@ -71,23 +77,24 @@ class AiAccidentEngine(
         model: LocalModel,
         backend: Backend = Backend.GPU(),
     ) = initialize(model.path, backend)
-    
+
     fun listDownloadedModels(): List<LocalModel> =
         modelDirectory.listFiles { file -> file.isFile && file.extension == MODEL_EXTENSION }
             .orEmpty()
             .map { file ->
                 LocalModel(
-                    name = availableModels.find { it.fileName == file.name }?.name ?: file.nameWithoutExtension,
+                    name = availableModels.find { it.fileName == file.name }?.name
+                        ?: file.nameWithoutExtension,
                     path = file.absolutePath,
                 )
             }
             .sortedBy { it.name }
-    
+
     fun listUndownloadedModels(): List<AiModel> {
         val modelNames = listDownloadedModels().map { it.name }
-        return availableModels.filter { it.name !in modelNames}
+        return availableModels.filter { it.name !in modelNames }
     }
-    
+
     suspend fun downloadModel(
         model: AiModel,
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
@@ -123,5 +130,33 @@ class AiAccidentEngine(
 
         check(partialFile.renameTo(modelFile)) { "Could not save model" }
         modelFile
+    }
+
+    /**
+     * Sends [message] and emits the response text chunk by chunk as the model generates it.
+     * Cancelling the collector stops the generation.
+     */
+    fun sendMessage(message: String): Flow<String> = callbackFlow {
+        val activeConversation = checkNotNull(conversation) { "Initialize a model first" }
+        var done = false
+        activeConversation.sendMessageAsync(
+            Contents.of(Content.Text(message)),
+            object : MessageCallback {
+                override fun onMessage(message: Message) {
+                    message.contents.contents.filterIsInstance<Content.Text>().forEach { trySend(it.text) }
+                }
+
+                override fun onDone() {
+                    done = true
+                    close()
+                }
+
+                override fun onError(throwable: Throwable) {
+                    done = true
+                    close(throwable)
+                }
+            },
+        )
+        awaitClose { if (!done) activeConversation.cancelProcess() }
     }
 }
