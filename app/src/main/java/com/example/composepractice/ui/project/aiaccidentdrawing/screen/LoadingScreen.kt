@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,11 +27,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.composepractice.ui.theme.ComposePracticeTheme
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
-private val MESSAGE_INTERVAL = 2_500.milliseconds
+private val MESSAGE_INTERVAL = 3.seconds
 
 private val loadingMessages = listOf(
     "Uw no-claimkorting wordt gecondoleerd...",
@@ -64,11 +68,17 @@ internal fun LoadingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(ScreenBackground)
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(56.dp), strokeWidth = 5.dp)
+        CircularProgressIndicator(
+            modifier = Modifier.size(56.dp),
+            strokeWidth = 5.dp,
+            color = ScreenForeground,
+            trackColor = ScreenBorder,
+        )
         Spacer(Modifier.height(32.dp))
         AnimatedContent(
             targetState = messages[index],
@@ -80,8 +90,17 @@ internal fun LoadingScreen() {
                 text = message,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
+                color = ScreenForeground,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun LoadingScreenPreview() {
+    ComposePracticeTheme {
+        LoadingScreen()
     }
 }

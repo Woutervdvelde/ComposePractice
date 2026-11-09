@@ -1,0 +1,14 @@
+-- Merging decision tree log ---
+manifest
+ADDED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml:2:1-13
+INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml:2:1-13
+	package
+		INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml
+uses-sdk
+INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml
+INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from E:\Projects\Android\ComposePractice\microBenchmark\src\main\AndroidManifest.xml

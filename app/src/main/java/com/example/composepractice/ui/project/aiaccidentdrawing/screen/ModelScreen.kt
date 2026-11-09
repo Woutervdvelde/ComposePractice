@@ -1,20 +1,27 @@
 package com.example.composepractice.ui.project.aiaccidentdrawing.screen
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,10 +32,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.composepractice.ui.project.aiaccidentdrawing.AiAccidentEngine
 import com.example.composepractice.ui.project.aiaccidentdrawing.AiModel
+import com.example.composepractice.ui.project.aiaccidentdrawing.BackendOption
 import com.example.composepractice.ui.project.aiaccidentdrawing.LocalModel
+import com.example.composepractice.ui.project.aiaccidentdrawing.availableModels
+import com.example.composepractice.ui.theme.ComposePracticeTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,7 +49,8 @@ import kotlinx.coroutines.withContext
 private sealed interface ModelAction {
     data object Idle : ModelAction
     data class Downloading(val model: AiModel, val progress: Float?) : ModelAction
-    data class Loading(val model: LocalModel) : ModelAction
+    data class DownloadingNpu(val model: AiModel, val progress: Float?) : ModelAction
+    data class Loading(val model: LocalModel, val backend: BackendOption) : ModelAction
 }
 
 @Composable
@@ -79,13 +92,38 @@ internal fun ModelScreen(
         }
     }
 
-    fun load(model: LocalModel) {
+    fun downloadNpu(model: AiModel) {
         error = null
-        action = ModelAction.Loading(model)
+        action = ModelAction.DownloadingNpu(model, progress = null)
+        scope.launch {
+            try {
+                var lastPercent = -1
+                engine.downloadNpuModel(model) { downloadedBytes, totalBytes ->
+                    if (totalBytes <= 0) return@downloadNpuModel
+                    val percent = (downloadedBytes * 100 / totalBytes).toInt()
+                    if (percent != lastPercent) {
+                        lastPercent = percent
+                        action = ModelAction.DownloadingNpu(model, progress = percent / 100f)
+                    }
+                }
+                refreshKey++
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (exception: Exception) {
+                error = "Downloading NPU variant for ${model.name} failed: ${exception.message}"
+            } finally {
+                action = ModelAction.Idle
+            }
+        }
+    }
+
+    fun load(model: LocalModel, backend: BackendOption) {
+        error = null
+        action = ModelAction.Loading(model, backend)
         scope.launch {
             try {
                 // Engine initialization blocks for several seconds
-                withContext(Dispatchers.Default) { engine.initialize(model) }
+                withContext(Dispatchers.Default) { engine.initialize(model, backend) }
                 onModelLoaded()
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -97,16 +135,22 @@ internal fun ModelScreen(
         }
     }
 
+    val cardColors = CardDefaults.cardColors(containerColor = ScreenBackground, contentColor = ScreenForeground)
+    val cardBorder = BorderStroke(1.dp, ScreenBorder)
+
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ScreenBackground)
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        error?.let { Text(text = it, color = MaterialTheme.colorScheme.error) }
+        error?.let { Text(text = it, color = ScreenForeground) }
 
-        Text("Undownloaded models")
+        Text("Undownloaded models", color = ScreenForeground)
         undownloadedModels.forEach { model ->
             val downloading = (action as? ModelAction.Downloading)?.takeIf { it.model == model }
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = cardColors, border = cardBorder) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -116,6 +160,7 @@ internal fun ModelScreen(
                         IconButton(
                             onClick = { download(model) },
                             enabled = !isBusy,
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = ScreenForeground),
                         ) {
                             Icon(Icons.Default.Download, contentDescription = "Download ${model.name}")
                         }
@@ -130,35 +175,115 @@ internal fun ModelScreen(
                         .padding(bottom = 16.dp)
                     val progress = downloading.progress
                     if (progress == null) {
-                        LinearProgressIndicator(modifier = progressModifier)
+                        LinearProgressIndicator(
+                            modifier = progressModifier,
+                            color = ScreenForeground,
+                            trackColor = ScreenBorder,
+                        )
                     } else {
-                        LinearProgressIndicator(progress = { progress }, modifier = progressModifier)
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = progressModifier,
+                            color = ScreenForeground,
+                            trackColor = ScreenBorder,
+                        )
                     }
                 }
             }
         }
 
-        Text("Downloaded models")
+        Text("Downloaded models", color = ScreenForeground)
         downloadedModels.forEach { model ->
+            val aiModel = availableModels.find { it.name == model.name }
             val isLoading = (action as? ModelAction.Loading)?.model == model
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Row(
+            val npuDownloading = (action as? ModelAction.DownloadingNpu)?.takeIf { it.model == aiModel }
+            var selectedBackend by remember(model.name) { mutableStateOf(BackendOption.GPU) }
+
+            Card(modifier = Modifier.fillMaxWidth(), colors = cardColors, border = cardBorder) {
+                Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(text = model.name, modifier = Modifier.weight(1f))
-                    if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    } else {
-                        Button(
-                            onClick = { load(model) },
-                            enabled = !isBusy,
-                        ) {
-                            Text("Use model")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = model.name, modifier = Modifier.weight(1f))
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = ScreenForeground)
+                        } else {
+                            Button(
+                                onClick = { load(model, selectedBackend) },
+                                enabled = !isBusy,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = ScreenForeground,
+                                    contentColor = ScreenBackground,
+                                ),
+                            ) {
+                                Text("Use model")
+                            }
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BackendOption.entries.forEach { backend ->
+                            // No NPU-compiled variant published for this model: don't offer it.
+                            if (backend == BackendOption.NPU && aiModel?.npuUrl == null) return@forEach
+                            val npuNeedsDownload = backend == BackendOption.NPU && model.npuPath == null
+                            FilterChip(
+                                selected = selectedBackend == backend && !npuNeedsDownload,
+                                onClick = {
+                                    if (npuNeedsDownload) {
+                                        aiModel?.let { downloadNpu(it) }
+                                    } else {
+                                        selectedBackend = backend
+                                    }
+                                },
+                                enabled = !isBusy,
+                                label = { Text(if (npuNeedsDownload) "${backend.label} (download)" else backend.label) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = ScreenBackground,
+                                    labelColor = ScreenForeground,
+                                    selectedContainerColor = ScreenForeground,
+                                    selectedLabelColor = ScreenBackground,
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selectedBackend == backend && !npuNeedsDownload,
+                                    borderColor = ScreenBorder,
+                                    selectedBorderColor = ScreenForeground,
+                                ),
+                            )
+                        }
+                    }
+
+                    if (npuDownloading != null) {
+                        val progressModifier = Modifier.fillMaxWidth()
+                        val progress = npuDownloading.progress
+                        if (progress == null) {
+                            LinearProgressIndicator(
+                                modifier = progressModifier,
+                                color = ScreenForeground,
+                                trackColor = ScreenBorder,
+                            )
+                        } else {
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = progressModifier,
+                                color = ScreenForeground,
+                                trackColor = ScreenBorder,
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun ModelScreenPreview() {
+    ComposePracticeTheme {
+        val context = LocalContext.current
+        val engine = remember { AiAccidentEngine(context) }
+        ModelScreen(engine = engine, onModelLoaded = {})
     }
 }

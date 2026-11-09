@@ -33,7 +33,7 @@ private sealed interface Screen {
     data object ModelSelect : Screen
     data object Draw : Screen
     data object Loading : Screen
-    data class Result(val sketch: ImageBitmap, val analysis: AccidentAnalysis) : Screen
+    data class Result(val sketch: ImageBitmap, val analysis: AccidentAnalysis, val stats: GenerationStats) : Screen
     data class Error(val sketch: ImageBitmap, val message: String) : Screen
 }
 
@@ -45,12 +45,12 @@ internal fun AiAccidentDrawingScreen() {
     val engine = remember { AiAccidentEngine(context) }
     val sketchState = remember { SketchState() }
 
-    fun analyze(sketch: ImageBitmap, request: suspend () -> AccidentAnalysis?) {
+    fun analyze(sketch: ImageBitmap, request: suspend () -> AnalysisResponse?) {
         screen = Screen.Loading
         scope.launch {
             screen = runCatching { request() }.fold(
-                onSuccess = { analysis ->
-                    analysis?.let { Screen.Result(sketch, it) }
+                onSuccess = { response ->
+                    response?.let { Screen.Result(sketch, it.analysis, it.stats) }
                         ?: Screen.Error(sketch, "The AI response could not be parsed")
                 },
                 onFailure = { Screen.Error(sketch, it.message ?: "Something went wrong") },
@@ -87,7 +87,11 @@ internal fun AiAccidentDrawingScreen() {
                     is Screen.Result -> ResultScreen(
                         sketch = state.sketch,
                         analysis = state.analysis,
+                        stats = state.stats,
                         onAnswer = { option ->
+                            // TODO
+                        },
+                        onCustomAnswer = { answer ->
                             // TODO
                         },
                         onRedraw = { screen = Screen.Draw },

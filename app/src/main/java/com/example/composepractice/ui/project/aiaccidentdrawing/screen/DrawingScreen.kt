@@ -20,9 +20,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
@@ -49,7 +53,9 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.composepractice.ui.theme.ComposePracticeTheme
 import kotlinx.coroutines.launch
 
 sealed interface DrawType {
@@ -100,6 +106,7 @@ internal fun DrawingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(ScreenBackground)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -107,6 +114,7 @@ internal fun DrawingScreen(
             text = "Sketch the accident",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
+            color = ScreenForeground,
         )
 
         SketchCanvas(
@@ -125,6 +133,20 @@ internal fun DrawingScreen(
                     onClick = { sketchState.selectedDrawType = drawType },
                     label = { Text(drawType.label) },
                     leadingIcon = { ColorDot(drawType.color) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = ScreenBackground,
+                        labelColor = ScreenForeground,
+                        iconColor = ScreenForeground,
+                        selectedContainerColor = ScreenForeground,
+                        selectedLabelColor = ScreenBackground,
+                        selectedLeadingIconColor = ScreenBackground,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = drawType == sketchState.selectedDrawType,
+                        borderColor = ScreenBorder,
+                        selectedBorderColor = ScreenForeground,
+                    ),
                 )
             }
         }
@@ -136,12 +158,16 @@ internal fun DrawingScreen(
             OutlinedIconButton(
                 onClick = { strokes.removeLastOrNull() },
                 enabled = strokes.isNotEmpty(),
+                colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = ScreenForeground),
+                border = BorderStroke(1.dp, ScreenBorder),
             ) {
                 Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
             }
             OutlinedIconButton(
                 onClick = { strokes.clear() },
                 enabled = strokes.isNotEmpty(),
+                colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = ScreenForeground),
+                border = BorderStroke(1.dp, ScreenBorder),
             ) {
                 Icon(Icons.Default.DeleteOutline, contentDescription = "Clear")
             }
@@ -149,6 +175,10 @@ internal fun DrawingScreen(
             Button(
                 onClick = { scope.launch { onSubmit(graphicsLayer.toImageBitmap()) } },
                 enabled = strokes.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ScreenForeground,
+                    contentColor = ScreenBackground,
+                ),
             ) {
                 Icon(Icons.Default.AutoAwesome, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -172,14 +202,14 @@ private fun SketchCanvas(
         modifier = modifier
             .clip(canvasShape)
             .background(Color.White)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, canvasShape),
+            .border(1.dp, ScreenBorder, canvasShape),
         contentAlignment = Alignment.Center,
     ) {
         if (strokes.isEmpty() && currentStroke.isEmpty()) {
             Text(
                 text = "Draw the roads and both vehicles' paths",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = ScreenForegroundMuted,
             )
         }
 
@@ -227,4 +257,33 @@ internal fun ColorDot(color: Color) {
             .clip(CircleShape)
             .background(color),
     )
+}
+
+@Preview
+@Composable
+private fun DrawingScreenEmptyPreview() {
+    ComposePracticeTheme {
+        DrawingScreen(sketchState = remember { SketchState() }, onSubmit = {})
+    }
+}
+
+@Preview
+@Composable
+private fun DrawingScreenWithStrokesPreview() {
+    ComposePracticeTheme {
+        val sketchState = remember {
+            SketchState().apply {
+                strokes.addAll(
+                    listOf(
+                        DrawnStroke(DrawType.Road, listOf(Offset(40f, 320f), Offset(650f, 320f))),
+                        DrawnStroke(DrawType.Road, listOf(Offset(340f, 60f), Offset(340f, 600f))),
+                        DrawnStroke(DrawType.A, listOf(Offset(60f, 300f), Offset(300f, 300f), Offset(320f, 80f))),
+                        DrawnStroke(DrawType.B, listOf(Offset(620f, 340f), Offset(360f, 340f))),
+                    )
+                )
+                selectedDrawType = DrawType.B
+            }
+        }
+        DrawingScreen(sketchState = sketchState, onSubmit = {})
+    }
 }
